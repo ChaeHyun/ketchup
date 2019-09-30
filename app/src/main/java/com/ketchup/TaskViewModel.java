@@ -33,12 +33,19 @@ public class TaskViewModel extends ViewModel {
     private LiveData<Task> task = _task;
     private LiveData<Boolean> loading = _loading;
 
+    // Added for configuring what type of task should be retrieved.
+    private MutableLiveData<Integer> _task_filter = new MutableLiveData<>();
+    private LiveData<Integer> task_filter = _task_filter;
+
 
     @Inject
     public TaskViewModel(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
     }
 
+    public LiveData<Integer> getTaskFilter() {
+        return task_filter;
+    }
 
     public LiveData<List<Task>> getTasks() {
         return tasks;
@@ -50,6 +57,10 @@ public class TaskViewModel extends ViewModel {
 
     public LiveData<Boolean> getLoading() {
         return loading;
+    }
+
+    public void setTaskType(int type) {
+        _task_filter.postValue(type);
     }
 
     // @Ignore : Only use for LiveData Testing.
@@ -104,9 +115,12 @@ public class TaskViewModel extends ViewModel {
     }
 
     public void insertTask(final Task task) {
+        if (task == null)
+            return;
         Executors.newSingleThreadExecutor().execute(() -> {
             Timber.i("[ insertTask ] : repo.insertTask(Task)");
             taskRepository.insertTask(task);
+            _task.postValue(task);
         });
     }
 
@@ -133,7 +147,6 @@ public class TaskViewModel extends ViewModel {
                 taskRepository.deleteAllTask()
         );
     }
-
 
 
     /** Still in testing. */

@@ -33,6 +33,11 @@ public class DummyTask {
         dummyTask.add(new Task(UUID.randomUUID().toString(), "물 8잔 마시기", true));
         dummyTask.add(new Task(UUID.randomUUID().toString(), "저녁약속 장소 찾기", true));
 
+        dummyTask.add(new Task(UUID.randomUUID().toString(), "달리기 3km", true));
+        dummyTask.add(new Task(UUID.randomUUID().toString(), "마트에서 우유 사오기", false));
+        dummyTask.add(new Task(UUID.randomUUID().toString(), "약속시간 확정하기", false));
+        dummyTask.add(new Task(UUID.randomUUID().toString(), "티켓팅하기", true));
+
         return dummyTask;
     }
 }

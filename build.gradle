@@ -1,6 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
+
     repositories {
         google()
         jcenter()
@@ -29,4 +30,5 @@ task clean(type: Delete) {
 ext {
     daggerVersion = '2.21'
     roomVersion = '2.2.0-alpha02'
+    navVersion = '2.1.0'
 }

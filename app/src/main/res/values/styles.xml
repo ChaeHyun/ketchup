@@ -17,4 +17,26 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <!-- TextAppearance -->
+    <style name="TextAppearanceSize.Large" parent="@android:style/TextAppearance">
+        <item name="android:textSize">42sp</item>
+        <item name="android:textStyle">bold|italic</item>
+
+    </style>
+
+    <style name="TextAppearanceSize.Medium" parent="@android:style/TextAppearance">
+        <item name="android:textSize">36sp</item>
+    </style>
+
+    <style name="TextAppearanceSize.Small" parent="@android:style/TextAppearance">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Date" parent="@android:style/TextAppearance">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:textColor">@color/grayTextColor</item>
+    </style>
+
 </resources>
