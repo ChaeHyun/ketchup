@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/task_list">
+    <fragment
+        android:id="@+id/task_list"
+        android:name="com.ketchup.TaskListFragment"
+        android:label="taskList"
+        tools:layout="@layout/fragment_task_list">
+
+        <argument
+            android:name="filter"
+            app:argType="integer"
+            android:defaultValue="1" />
+        <action
+            android:id="@+id/action_task_list_self"
+            app:popUpTo="@id/task_list"
+            app:launchSingleTop="true" />
+
+    </fragment>
+
+</navigation>

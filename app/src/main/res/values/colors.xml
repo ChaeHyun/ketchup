@@ -3,4 +3,32 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+    <color name="greyBlue">#90a4ae</color>
+    <color name="purple">#673ab7</color>
+    <color name="gold">#ffca28</color>
+    <color name="darkGold">#ffc107</color>
+
+    <!-- Text Colors -->
+    <color name="blackTextColor">#000000</color>
+    <color name="grayTextColor">#757575</color>
+
+    <!-- Background Colors -->
+    <color name="addItemToolbar">#D7CCC8</color>
+    <color name="lightGray">#ededed</color>
+    <color name="deepPurple">#7c4dff</color>
+    <color name="yellow">#ffb300</color>
+    <color name="green">#00bfa5</color>
+    <color name="backgroundColor">#fafafa</color>
+    <color name="itemBackgroundColor_onPressed">#eeeeee</color>
+
+
+    <!-- ColorLabel Labels -->
+    <color name="labelLightGray">#ededed</color>
+    <color name="defaultGray">#D7CCC8</color>
+    <color name="labelBlue">#1976D2</color>
+    <color name="labelRed">#D32f2F</color>
+    <color name="labelYellow">#FBC02D</color>
+    <color name="labelPurple">#7B1FA2</color>
+    <color name="labelGreen">#2E7D32</color>
 </resources>
