@@ -21,7 +21,7 @@ import javax.inject.Inject;
 import timber.log.Timber;
 
 @ActivityScope
-public class TaskViewModel extends ViewModel {
+public class TaskListViewModel extends ViewModel {
 
     private TaskRepository taskRepository;
 
@@ -39,7 +39,7 @@ public class TaskViewModel extends ViewModel {
 
 
     @Inject
-    public TaskViewModel(TaskRepository taskRepository) {
+    public TaskListViewModel(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
     }
 

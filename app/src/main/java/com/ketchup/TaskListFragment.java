@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -39,24 +40,14 @@ public class TaskListFragment extends DaggerFragment {
     @Inject
     DaggerViewModelFactory viewModelFactory;
 
-    private TaskViewModel taskViewModel;
+    private TaskListViewModel taskListViewModel;
 
     public static String TASK_FILTER = "task_filter";
 
 
-    public static TaskListFragment createFor(Bundle bundle, int filter) {
-        TaskListFragment fragment = new TaskListFragment();
-        if (bundle == null)
-            bundle = new Bundle();
-        bundle.putInt(TASK_FILTER, filter);
-        fragment.setArguments(bundle);
-
-        return fragment;
-    }
     public TaskListFragment() {
         // Required empty public constructor
     }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -76,12 +67,6 @@ public class TaskListFragment extends DaggerFragment {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        Timber.d("[ onPause()] ");
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -92,38 +77,36 @@ public class TaskListFragment extends DaggerFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        taskViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskViewModel.class);
+        // setup ViewModel
+        taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
 
-        taskViewModel.getTasks().observe(this, list -> {
-            Timber.d("[ Observer in TaskListFragment for List<Task>]");
-            for(Task t : list) {
-                Timber.d("Task 값 : " + t.getTitle() + "\n");
-            }
-            taskAdapter.setTasks(list);
-        });
+        // View Binding.
+        setupCollapsingToolbar();
+        setupEmptyRecyclerView();
+        setupFab();
 
-        taskViewModel.getTask().observe(this, task -> {
-            Timber.d("[ Observer in TaskListFragment for SingleTask ]");
-            Timber.d("Task 값: %s", task.getTitle());
-            List<Task> temp = new ArrayList<>();
-            temp.add(task);
-            taskAdapter.appendTasks(temp);
-        });
-
-        taskViewModel.getTaskFilter().observe(this, filter -> {
-           Timber.d("[ Type Value Check ] : %d ", filter);
-        });
-
-        taskViewModel.loadTasks();
+        observeFilter();
+        observeLoading();
+        observeTasks();
 
         if (getArguments() != null) {
             Timber.d("TASK_FILTER : %d ", getArguments().getInt(TASK_FILTER));
         }
 
-        // View Binding.
+        taskListViewModel.loadTasks();
+    }
+
+    private void setupCollapsingToolbar() {
         if (getActivity() != null) {
             // Collapsing Toolbar 인스턴스 얻어오기 from MainActivity's View
             ctl = getActivity().findViewById(R.id.activity_main_collapsing_toolbar);
+            ctl.setTitle("TaskList");
+        }
+    }
+
+    private void setupEmptyRecyclerView() {
+        if (getActivity() != null) {
+            taskAdapter = new TaskAdapter();
 
             // EmptyRecyclerView Init
             recyclerView = getActivity().findViewById(R.id.fragment_task_list_recycler_view);
@@ -131,24 +114,50 @@ public class TaskListFragment extends DaggerFragment {
             recyclerView.setEmptyView(getActivity().findViewById(R.id.fragment_task_list_empty_item));
             recyclerView.setNestedScrollingEnabled(false);
 
+            recyclerView.setAdapter(taskAdapter);
+        }
+    }
+
+    private void setupFab() {
+        if (getActivity() != null) {
             // FAB
             FloatingActionButton fab = getActivity().findViewById(R.id.fab);
             fab.setOnClickListener(v -> {
                 Timber.d("[ FAB.onClick in TaskListFragment]");
-                //taskViewModel.loadTasksByTitle("세탁물 맡기기");
-                Task newTask = new Task(UUID.randomUUID().toString(), "새로운 할일", false);
-                taskViewModel.insertTask(newTask);
+
+                // Navigate To AddEditFragment, with Args : taskId, mode
+                //Task newTask = new Task(UUID.randomUUID().toString(), "새로운 할일", false);
+                //taskListViewModel.insertTask(newTask);
             });
         }
+    }
 
-        ctl.setTitle("TaskList");       // 나중에 Activity --nav--> Fragment 에서 넘겨받도록 수정할것.
+    private void observeFilter() {
+        taskListViewModel.getTaskFilter().observe(this, filter -> {
+            Timber.d("[ Type Value Check ] : %d ", filter);
+        });
+    }
 
-        // Adapter Init
-        taskAdapter = new TaskAdapter();
+    private void observeLoading() {
+        // Observe
+        taskListViewModel.getLoading().observe(this, loading -> {
+            if (loading) {
+                Timber.v("[ LiveData loading is TRUE ]");
+                Toast.makeText(getActivity(), "Loading : TRUE", Toast.LENGTH_SHORT).show();
+            } else {
+                Timber.v("[ LiveData loading is FALSE ]");
+                Toast.makeText(getActivity(), "Loading : FALSE", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
-        // Adapter - RV binding
-        recyclerView.setAdapter(taskAdapter);
-
-
+    private void observeTasks() {
+        taskListViewModel.getTasks().observe(this, list -> {
+            Timber.d("[ Observer in TaskListFragment for List<Task>]");
+            for(Task t : list) {
+                Timber.d("Task 값 : " + t.getTitle() + "\n");
+            }
+            taskAdapter.setTasks(list);
+        });
     }
 }

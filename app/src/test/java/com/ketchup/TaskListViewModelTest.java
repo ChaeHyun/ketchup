@@ -18,11 +18,11 @@ import java.util.UUID;
 
 import timber.log.Timber;
 
-public class TaskViewModelTest {
+public class TaskListViewModelTest {
     @Rule
     public InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
 
-    private TaskViewModel viewModel;
+    private TaskListViewModel viewModel;
     private FakeTaskRepository repository;
     private Task newTask = new Task(UUID.randomUUID().toString(), "Newly added Task");
     private UUID saved = UUID.randomUUID();
@@ -41,7 +41,7 @@ public class TaskViewModelTest {
         repository = new FakeTaskRepository(data);
 
         // FakeRepository 를 이용해서 ViewModel 인스턴스를 생성한다.
-        viewModel = new TaskViewModel(repository);
+        viewModel = new TaskListViewModel(repository);
     }
 
     @After

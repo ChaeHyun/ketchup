@@ -6,7 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.Future;
 
 public interface TaskRepository {
-    // Methods to open to the TaskViewModel
+    // Methods to open to the TaskListViewModel
     List<Task> getAllTasks();
 
     Task getTask(UUID uuid);

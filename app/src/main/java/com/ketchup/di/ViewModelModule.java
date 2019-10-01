@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.ketchup.DaggerViewModelFactory;
-import com.ketchup.TaskViewModel;
+import com.ketchup.TaskListViewModel;
 
 import dagger.Binds;
 import dagger.Module;
@@ -18,6 +18,6 @@ public abstract class ViewModelModule {
 
     @Binds
     @IntoMap
-    @ViewModelKey(TaskViewModel.class)
-    abstract ViewModel bindTaskViewModel(TaskViewModel taskViewModel);
+    @ViewModelKey(TaskListViewModel.class)
+    abstract ViewModel bindTaskViewModel(TaskListViewModel taskListViewModel);
 }

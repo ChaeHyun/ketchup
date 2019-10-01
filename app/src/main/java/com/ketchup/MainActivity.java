@@ -1,14 +1,11 @@
 package com.ketchup;
 
 
-import android.app.FragmentManager;
 import android.os.Bundle;
 
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
-
-import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,8 +20,6 @@ import com.ketchup.model.task.Task;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
@@ -32,8 +27,6 @@ import androidx.navigation.Navigation;
 
 import android.view.Menu;
 import android.widget.Toast;
-
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -44,8 +37,7 @@ public class MainActivity extends DaggerAppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     NavController navController;
-
-    TaskViewModel taskViewModel;
+    TaskListViewModel taskListViewModel;
 
     @Inject
     DaggerViewModelFactory viewModelFactory;
@@ -55,26 +47,23 @@ public class MainActivity extends DaggerAppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // setup ViewModel
+        taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
+        setupDrawerLayout();
+        setupNavController();
+
+    }
+
+    private void setupDrawerLayout() {
+        // Setup Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         CollapsingToolbarLayout ctl = findViewById(R.id.activity_main_collapsing_toolbar);
         ctl.setTitle("Collapsing Toolbar");
 
-        /** Floating Action Button */
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Timber.i("[ Refresh() ]");
-                taskViewModel.refresh();
-
-                Snackbar.make(view, "Load All Tasks", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
-        /** Drawer & NavigationView */
+        /// Setup Navigation Drawer
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -82,7 +71,9 @@ public class MainActivity extends DaggerAppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
+    }
 
+    private void setupNavController() {
         navController = Navigation.findNavController(this, R.id.activity_nav_host_fragment);
         navController.addOnDestinationChangedListener(new NavController.OnDestinationChangedListener() {
             @Override
@@ -90,53 +81,6 @@ public class MainActivity extends DaggerAppCompatActivity
                 Timber.d("[onDestinationChanged ] : " + destination.getId());
             }
         });
-
-        taskViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskViewModel.class);
-
-
-        // Observe
-        taskViewModel.getLoading().observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean aBoolean) {
-                if (aBoolean) {
-                    Timber.v("[ LiveData loading is TRUE ]");
-                    Toast.makeText(getApplicationContext(), "Loading : TRUE", Toast.LENGTH_SHORT).show();
-                } else {
-                    Timber.v("[ LiveData loading is FALSE ]");
-                    Toast.makeText(getApplicationContext(), "Loading : FALSE", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        taskViewModel.getTasks().observe(this, new Observer<List<Task>>() {
-            @Override
-            public void onChanged(List<Task> tasks) {
-                Timber.v("[ Observer got a change - List<Task> ]");
-                for (Task t : tasks)
-                    Timber.v(t.getTitle());
-            }
-        });
-
-        taskViewModel.getTask().observe(this, new Observer<Task>() {
-            @Override
-            public void onChanged(Task task) {
-                Timber.v("[ Observer got a change - Single Task ]");
-                if (task == null) {
-                    Timber.v("Not found");
-                }
-                else {
-                    Timber.v(task.getTitle());
-                }
-            }
-        });
-
-    }
-
-    private void showFragment(@NonNull final Fragment fragment) {
-        FragmentManager fragmentManager = getFragmentManager();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.activity_nav_host_fragment, fragment)
-                .commit();
     }
 
     @Override
@@ -181,7 +125,7 @@ public class MainActivity extends DaggerAppCompatActivity
         if (id == R.id.nav_home) {
             Toast.makeText(this, "1번 메뉴 선택", Toast.LENGTH_LONG).show();
 
-            taskViewModel.setTaskType(1);
+            taskListViewModel.setTaskType(1);
 
         } else if (id == R.id.nav_gallery) {
             Toast.makeText(this, "2번 메뉴 선택", Toast.LENGTH_LONG).show();
@@ -190,12 +134,12 @@ public class MainActivity extends DaggerAppCompatActivity
             bundle.putInt(TaskListFragment.TASK_FILTER, 2);
 
             Navigation.findNavController(this, R.id.activity_nav_host_fragment).navigate(R.id.action_task_list_self, bundle);
-            taskViewModel.setTaskType(2);
+            taskListViewModel.setTaskType(2);
 
         } else if (id == R.id.nav_slideshow) {
             Toast.makeText(this, "3번 메뉴 선택", Toast.LENGTH_LONG).show();
 
-            taskViewModel.setTaskType(3);
+            taskListViewModel.setTaskType(3);
 
         } else if (id == R.id.nav_tools) {
 
