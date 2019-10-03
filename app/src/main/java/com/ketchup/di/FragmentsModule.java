@@ -1,6 +1,7 @@
 package com.ketchup.di;
 
-import com.ketchup.TaskListFragment;
+import com.ketchup.AddEditTaskFragment;
+import com.ketchup.tasklist.TaskListFragment;
 
 import dagger.Module;
 import dagger.android.ContributesAndroidInjector;
@@ -9,4 +10,7 @@ import dagger.android.ContributesAndroidInjector;
 abstract public class FragmentsModule {
     @ContributesAndroidInjector
     abstract TaskListFragment contributesTaskListFragment();
+
+    @ContributesAndroidInjector
+    abstract AddEditTaskFragment contributesAddEditTaskFragment();
 }

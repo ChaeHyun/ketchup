@@ -4,8 +4,6 @@ package com.ketchup;
 import android.os.Bundle;
 
 import com.google.android.material.appbar.CollapsingToolbarLayout;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,8 +12,10 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 
 import android.view.MenuItem;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.ketchup.model.task.Task;
+import com.ketchup.tasklist.TaskListFragment;
+import com.ketchup.tasklist.TaskListViewModel;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -24,6 +24,7 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 
 import android.view.Menu;
 import android.widget.Toast;
@@ -50,8 +51,8 @@ public class MainActivity extends DaggerAppCompatActivity
 
         // setup ViewModel
         taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
-        setupDrawerLayout();
         setupNavController();
+        setupDrawerLayout();
 
     }
 
@@ -71,6 +72,8 @@ public class MainActivity extends DaggerAppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
+
+        NavigationUI.setupActionBarWithNavController(this, navController, drawer);
     }
 
     private void setupNavController() {
@@ -78,7 +81,29 @@ public class MainActivity extends DaggerAppCompatActivity
         navController.addOnDestinationChangedListener(new NavController.OnDestinationChangedListener() {
             @Override
             public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
-                Timber.d("[onDestinationChanged ] : " + destination.getId());
+                /* Remove later : BackStack Logging */
+                Timber.d("[onDestinationChanged ] : %s", destination.getLabel());
+
+                Timber.d("BackStack Cnt : %d", getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryCount());
+                int size = getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryCount();
+                for (int i = 0; i < size; i++) {
+                    Timber.d(getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryAt(i).getName());
+                }
+
+                FloatingActionButton fab = findViewById(R.id.fab);
+                switch (destination.getLabel().toString()) {
+                    case "taskList":
+                        fab.setImageDrawable(getDrawable(R.drawable.ic_menu_share));
+                        fab.show();
+                        break;
+
+                    case "fragment_add_edit_task":
+                        fab.hide();
+                        break;
+
+                    default:
+                        fab.hide();
+                }
             }
         });
     }
@@ -131,7 +156,7 @@ public class MainActivity extends DaggerAppCompatActivity
             Toast.makeText(this, "2번 메뉴 선택", Toast.LENGTH_LONG).show();
 
             Bundle bundle = new Bundle();
-            bundle.putInt(TaskListFragment.TASK_FILTER, 2);
+            bundle.putInt(TaskListFragment.TASK_FILTER, 5);
 
             Navigation.findNavController(this, R.id.activity_nav_host_fragment).navigate(R.id.action_task_list_self, bundle);
             taskListViewModel.setTaskType(2);

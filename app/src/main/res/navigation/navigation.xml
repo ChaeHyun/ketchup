@@ -5,7 +5,7 @@
     app:startDestination="@id/task_list">
     <fragment
         android:id="@+id/task_list"
-        android:name="com.ketchup.TaskListFragment"
+        android:name="com.ketchup.tasklist.TaskListFragment"
         android:label="taskList"
         tools:layout="@layout/fragment_task_list">
 
@@ -15,8 +15,34 @@
             android:defaultValue="1" />
         <action
             android:id="@+id/action_task_list_self"
-            app:popUpTo="@id/task_list"
-            app:launchSingleTop="true" />
+            app:popUpTo="@id/task_list" />
+
+        <action
+            android:id="@+id/action_task_list_to_addEditTaskFragment"
+            app:destination="@id/addEditTaskFragment" />
+
+    </fragment>
+    <fragment
+        android:id="@+id/addEditTaskFragment"
+        android:name="com.ketchup.AddEditTaskFragment"
+        android:label="fragment_add_edit_task"
+        tools:layout="@layout/fragment_add_edit_task" >
+
+        <argument
+            android:name="MODE"
+            app:argType="string"
+            android:defaultValue="ADD_MODE" />
+        <argument
+            android:name="taskId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="null" />
+        <action
+            android:id="@+id/action_addEditTaskFragment_to_task_list"
+            app:destination="@id/task_list"
+            app:popUpTo="@+id/task_list"
+            app:popUpToInclusive="true" />
+
 
     </fragment>
 

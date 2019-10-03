@@ -1,11 +1,18 @@
-package com.ketchup;
+package com.ketchup.tasklist;
 
 import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
+import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.view.LayoutInflater;
@@ -15,11 +22,12 @@ import android.widget.Toast;
 
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.ketchup.AddEditTaskFragment;
+import com.ketchup.DaggerViewModelFactory;
+import com.ketchup.R;
 import com.ketchup.model.task.Task;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -41,9 +49,11 @@ public class TaskListFragment extends DaggerFragment {
     DaggerViewModelFactory viewModelFactory;
 
     private TaskListViewModel taskListViewModel;
+    private NavController navController;
+
+    private FloatingActionButton fab;
 
     public static String TASK_FILTER = "task_filter";
-
 
     public TaskListFragment() {
         // Required empty public constructor
@@ -52,6 +62,7 @@ public class TaskListFragment extends DaggerFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Timber.d("[ onCreate() ]");
 
     }
 
@@ -67,6 +78,18 @@ public class TaskListFragment extends DaggerFragment {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        Timber.d("[ onPause() ]");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Timber.d("[ onDestroy() ]");
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -76,7 +99,7 @@ public class TaskListFragment extends DaggerFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        Timber.d("[ onViewCreated() ]");
         // setup ViewModel
         taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
 
@@ -93,6 +116,9 @@ public class TaskListFragment extends DaggerFragment {
             Timber.d("TASK_FILTER : %d ", getArguments().getInt(TASK_FILTER));
         }
 
+        navController = NavHostFragment.findNavController(this);
+
+
         taskListViewModel.loadTasks();
     }
 
@@ -100,7 +126,7 @@ public class TaskListFragment extends DaggerFragment {
         if (getActivity() != null) {
             // Collapsing Toolbar 인스턴스 얻어오기 from MainActivity's View
             ctl = getActivity().findViewById(R.id.activity_main_collapsing_toolbar);
-            ctl.setTitle("TaskList");
+            ctl.setTitle("TaskListScreen");
         }
     }
 
@@ -121,20 +147,45 @@ public class TaskListFragment extends DaggerFragment {
     private void setupFab() {
         if (getActivity() != null) {
             // FAB
-            FloatingActionButton fab = getActivity().findViewById(R.id.fab);
+            fab = getActivity().findViewById(R.id.fab);
             fab.setOnClickListener(v -> {
                 Timber.d("[ FAB.onClick in TaskListFragment]");
 
-                // Navigate To AddEditFragment, with Args : taskId, mode
-                //Task newTask = new Task(UUID.randomUUID().toString(), "새로운 할일", false);
-                //taskListViewModel.insertTask(newTask);
+                navigateToAddEditTaskFragment("ADD_MODE", null);
             });
         }
     }
 
+    private void navigateToAddEditTaskFragment(String mode, String taskId) {
+        Timber.d("[ navigateTo AddEditTaskFragment ] : %s, %s", mode, taskId);
+        Bundle bundle = new Bundle();
+        bundle.putString(AddEditTaskFragment.MODE, mode);
+        bundle.putString(AddEditTaskFragment.TASK_ID, taskId);
+
+        navController.navigate(R.id.action_task_list_to_addEditTaskFragment, bundle);
+    }
+
     private void observeFilter() {
-        taskListViewModel.getTaskFilter().observe(this, filter -> {
-            Timber.d("[ Type Value Check ] : %d ", filter);
+        taskListViewModel.getTaskFilter().observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer filter) {
+                Timber.d("[ Type Value Check ] : %d ", filter);
+
+                switch (filter) {
+                    case 1:
+                        // 전체 Task 가져오기
+                        taskListViewModel.loadTasks();
+                        break;
+                    case 2:
+                        // 미완료 Task만 가져오기
+                        taskListViewModel.loadTasksCompleted(false);
+                        break;
+                    case 3:
+                        // 완료된 Task만 가져오기
+                        taskListViewModel.loadTasksCompleted(true);
+                        break;
+                }
+            }
         });
     }
 
@@ -155,7 +206,7 @@ public class TaskListFragment extends DaggerFragment {
         taskListViewModel.getTasks().observe(this, list -> {
             Timber.d("[ Observer in TaskListFragment for List<Task>]");
             for(Task t : list) {
-                Timber.d("Task 값 : " + t.getTitle() + "\n");
+                //Timber.d("Task 값 : " + t.getTitle() + "\n");
             }
             taskAdapter.setTasks(list);
         });

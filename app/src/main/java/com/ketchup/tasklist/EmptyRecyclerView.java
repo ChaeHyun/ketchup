@@ -1,4 +1,4 @@
-package com.ketchup;
+package com.ketchup.tasklist;
 
 import android.content.Context;
 import android.util.AttributeSet;

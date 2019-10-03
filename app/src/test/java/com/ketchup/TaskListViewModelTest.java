@@ -3,6 +3,7 @@ package com.ketchup;
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
 import com.ketchup.model.task.Task;
+import com.ketchup.tasklist.TaskListViewModel;
 
 import org.junit.After;
 import org.junit.Assert;

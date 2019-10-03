@@ -1,4 +1,4 @@
-package com.ketchup;
+package com.ketchup.tasklist;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ketchup.R;
 import com.ketchup.model.ColorLabel;
 import com.ketchup.model.task.Task;
 
@@ -53,7 +54,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task item = itemList.get(position);
 
-        Timber.d("item : %s", item.getTitle());
+        //Timber.d("item : %s", item.getTitle());
 
         holder.titleTextView.setText(item.getTitle());
         holder.descTextView.setText(item.getDescription());
