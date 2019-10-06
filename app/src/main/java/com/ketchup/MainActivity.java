@@ -7,14 +7,11 @@ import com.google.android.material.appbar.CollapsingToolbarLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.view.GravityCompat;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 
-import android.view.Gravity;
 import android.view.MenuItem;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.ketchup.tasklist.TaskListFragment;
 import com.ketchup.tasklist.TaskListViewModel;
@@ -44,7 +41,6 @@ public class MainActivity extends DaggerAppCompatActivity
 
     @Inject
     DaggerViewModelFactory viewModelFactory;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,23 +88,14 @@ public class MainActivity extends DaggerAppCompatActivity
                 /* Remove later : BackStack Logging */
                 Timber.d("[onDestinationChanged ] : %s", destination.getLabel());
 
+                /*
+                // To check BackStack state
                 Timber.d("BackStack Cnt : %d", getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryCount());
                 int size = getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryCount();
                 for (int i = 0; i < size; i++) {
                     Timber.d(getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryAt(i).getName());
                 }
-
-                FloatingActionButton fab = findViewById(R.id.fab);
-                switch (destination.getLabel().toString()) {
-                    case "taskList":
-                        Timber.d("TASK_LIST_FRAGMENT");
-                        fab.setImageDrawable(getDrawable(R.drawable.ic_menu_share));
-                        break;
-
-                    case "fragment_add_edit_task":
-                        Timber.d("ADD_EDIT_TASK_FRAGMENT");
-
-                }
+                */
             }
         });
     }

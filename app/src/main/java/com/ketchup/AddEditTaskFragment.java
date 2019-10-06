@@ -22,9 +22,6 @@ import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.ketchup.tasklist.TaskListFragment;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import dagger.android.support.DaggerFragment;
 import timber.log.Timber;
 
@@ -91,8 +88,8 @@ public class AddEditTaskFragment extends DaggerFragment {
                 /**
                  * It's a bug in the FloatingActionButton class: When calling show(), imageMatrixScale is set to 0.
                  * */
-                fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_menu_send));
                 fab.hide();
+                fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_menu_send));
                 fab.show();
             }
         }
