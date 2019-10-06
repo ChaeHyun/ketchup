@@ -1,11 +1,15 @@
 package com.ketchup.tasklist;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -15,6 +19,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +33,7 @@ import com.ketchup.R;
 import com.ketchup.model.task.Task;
 
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -87,6 +93,7 @@ public class TaskListFragment extends DaggerFragment {
     public void onDestroy() {
         super.onDestroy();
         Timber.d("[ onDestroy() ]");
+        navController.removeOnDestinationChangedListener(destinationChangedListener);
     }
 
     @Override
@@ -117,10 +124,31 @@ public class TaskListFragment extends DaggerFragment {
         }
 
         navController = NavHostFragment.findNavController(this);
+        navController.addOnDestinationChangedListener(destinationChangedListener);
 
 
         taskListViewModel.loadTasks();
     }
+
+    private NavController.OnDestinationChangedListener destinationChangedListener = new NavController.OnDestinationChangedListener() {
+        @Override
+        public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
+            if (destination.getLabel().toString().equals("taskList")) {
+                Timber.d(" TASK_LIST_FRAGMENT ");
+
+                // Disable the anchored position of Floating Action Button
+                CoordinatorLayout.LayoutParams pl = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
+                pl.gravity = Gravity.BOTTOM| GravityCompat.END;
+                pl.setAnchorId(-1);
+                pl.anchorGravity = 0;
+                fab.setLayoutParams(pl);
+
+                fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_add_black_24dp));
+                fab.hide();
+                fab.show();
+            }
+        }
+    };
 
     private void setupCollapsingToolbar() {
         if (getActivity() != null) {
@@ -148,6 +176,7 @@ public class TaskListFragment extends DaggerFragment {
         if (getActivity() != null) {
             // FAB
             fab = getActivity().findViewById(R.id.fab);
+
             fab.setOnClickListener(v -> {
                 Timber.d("[ FAB.onClick in TaskListFragment]");
 

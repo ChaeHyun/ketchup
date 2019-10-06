@@ -5,23 +5,25 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
-import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 
-import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.ketchup.tasklist.TaskListFragment;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import dagger.android.support.DaggerFragment;
 import timber.log.Timber;
@@ -35,7 +37,7 @@ public class AddEditTaskFragment extends DaggerFragment {
     public static final String MODE = "mode";
     public static final String TASK_ID = "taskId";
 
-    FloatingActionButton fab;
+    private FloatingActionButton fab;
 
     public AddEditTaskFragment() {
         // Required empty public constructor
@@ -71,14 +73,27 @@ public class AddEditTaskFragment extends DaggerFragment {
 
     }
 
-    NavController.OnDestinationChangedListener onDestinationChangedListener = new NavController.OnDestinationChangedListener() {
+    private NavController.OnDestinationChangedListener onDestinationChangedListener = new NavController.OnDestinationChangedListener() {
         @Override
         public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
             Timber.d("\n   Destination : %s" , destination.getLabel() + ",   arguments : " + arguments);
             if (destination.getLabel().equals("fragment_add_edit_task")) {
                 Timber.d("ADD_EDIT_TASK_FRAGMENT in ADD_EDIT_FRAGMENT");
-                fab.setImageDrawable(getActivity().getDrawable(R.drawable.ic_menu_send));
-                //fab.hide();
+
+                // make an anchor to "appbar"
+                CoordinatorLayout.LayoutParams pl = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
+                pl.setAnchorId(R.id.appbar);
+                pl.anchorGravity = Gravity.BOTTOM | GravityCompat.END;
+                pl.gravity = 0;
+                fab.setLayoutParams(pl);
+
+                // show() bug
+                /**
+                 * It's a bug in the FloatingActionButton class: When calling show(), imageMatrixScale is set to 0.
+                 * */
+                fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_menu_send));
+                fab.hide();
+                fab.show();
             }
         }
     };
@@ -90,13 +105,19 @@ public class AddEditTaskFragment extends DaggerFragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
+        //fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_add_black_24dp));
         Timber.d("[ onDestroy() - DestinationChangedListener Remove ]");
         NavHostFragment.findNavController(this).removeOnDestinationChangedListener(onDestinationChangedListener);
     }
 
-    private void setupFab(int viewId) {
+    private void setupFab(@NonNull int viewId) {
         fab = getActivity().findViewById(viewId);
 
         fab.setOnClickListener(v -> {

@@ -21,16 +21,6 @@
             android:id="@+id/layout_content_item"
             layout="@layout/content_add_item" />
 
-
     </androidx.core.widget.NestedScrollView>
-
-    <!--<com.google.android.material.floatingactionbutton.FloatingActionButton-->
-        <!--android:id="@+id/fab_save"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_margin="@dimen/fab_margin"-->
-        <!--android:layout_gravity="center_horizontal|clip_horizontal"-->
-        <!--app:fabSize="auto"-->
-        <!--app:srcCompat="@android:drawable/ic_menu_save" />-->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

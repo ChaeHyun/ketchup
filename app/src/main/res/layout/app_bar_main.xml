@@ -52,9 +52,6 @@
         app:defaultNavHost="true"
         app:navGraph="@navigation/navigation" />
 
-    <!-- before editing
-    <include layout="@layout/content_main" />
-    -->
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
@@ -62,6 +59,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
         android:layout_gravity="bottom|end"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
+        app:fabSize="auto"
+        app:srcCompat="@drawable/ic_add_black_24dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
