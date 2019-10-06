@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/content_add_item_color_layout_constraint"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:id="@+id/add_item_color_switch_layout_linear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:animateLayoutChanges="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/add_item_title_icon_color_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:src="@drawable/ic_outline_label_24dp" />
+
+        <TextView
+            android:id="@+id/add_item_title_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/color_label"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="end">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/add_item_switch_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:checked="false" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <RadioGroup
+        android:id="@+id/add_item_radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="5dp"
+        android:layout_marginTop="20dp"
+        android:animateLayoutChanges="true"
+        android:gravity="center"
+        android:visibility="gone"
+        android:saveEnabled="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/add_item_color_switch_layout_linear">
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+        android:id="@+id/label_red"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="10dp"
+        android:button="@null"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="5dp"
+        android:background="@drawable/selector_color_label_red"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/label_blue"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="10dp"
+            android:button="@null"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="5dp"
+            android:background="@drawable/selector_color_label_blue"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/label_yellow"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="10dp"
+            android:button="@null"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="5dp"
+            android:background="@drawable/selector_color_label_yellow"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/label_green"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="10dp"
+            android:button="@null"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="5dp"
+            android:background="@drawable/selector_color_label_green"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/label_purple"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="10dp"
+            android:button="@null"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="5dp"
+            android:background="@drawable/selector_color_label_purple"/>
+    </RadioGroup>
+</androidx.constraintlayout.widget.ConstraintLayout>

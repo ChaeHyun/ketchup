@@ -21,4 +21,10 @@
     <string name="item_title">Title</string>
     <string name="item_due_date">time</string>
     <string name="item_description">Check you activity</string>
+
+
+    <string name="desc">Description</string>
+    <string name="color_label">Label</string>
+    <string name="complete">Complete</string>
+    <string name="reminder">Reminder</string>
 </resources>
