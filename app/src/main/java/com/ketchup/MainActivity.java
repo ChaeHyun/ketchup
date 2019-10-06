@@ -7,9 +7,11 @@ import com.google.android.material.appbar.CollapsingToolbarLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.view.GravityCompat;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 
+import android.view.Gravity;
 import android.view.MenuItem;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -56,6 +58,12 @@ public class MainActivity extends DaggerAppCompatActivity
 
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // DestinationChangedListener listener 해제해줘야한다.
+    }
+
     private void setupDrawerLayout() {
         // Setup Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -93,16 +101,13 @@ public class MainActivity extends DaggerAppCompatActivity
                 FloatingActionButton fab = findViewById(R.id.fab);
                 switch (destination.getLabel().toString()) {
                     case "taskList":
+                        Timber.d("TASK_LIST_FRAGMENT");
                         fab.setImageDrawable(getDrawable(R.drawable.ic_menu_share));
-                        fab.show();
                         break;
 
                     case "fragment_add_edit_task":
-                        fab.hide();
-                        break;
+                        Timber.d("ADD_EDIT_TASK_FRAGMENT");
 
-                    default:
-                        fab.hide();
                 }
             }
         });

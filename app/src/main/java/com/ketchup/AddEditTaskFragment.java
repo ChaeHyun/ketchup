@@ -35,6 +35,7 @@ public class AddEditTaskFragment extends DaggerFragment {
     public static final String MODE = "mode";
     public static final String TASK_ID = "taskId";
 
+    FloatingActionButton fab;
 
     public AddEditTaskFragment() {
         // Required empty public constructor
@@ -54,6 +55,8 @@ public class AddEditTaskFragment extends DaggerFragment {
         CollapsingToolbarLayout ctl = getActivity().findViewById(R.id.activity_main_collapsing_toolbar);
         ctl.setTitle("Add Task");
 
+        Timber.d("[ onViewCreated ]");
+
 
         if (getArguments() != null) {
             String mode = getArguments().getString(MODE);
@@ -62,19 +65,39 @@ public class AddEditTaskFragment extends DaggerFragment {
             Timber.d("[ Check Args. Values ]\nMode -> %s\ntaskId -> %s", mode, taskId);
         }
 
-        setupFab(R.id.fab_save);
+        setupFab(R.id.fab);
 
-        NavHostFragment.findNavController(this).addOnDestinationChangedListener(new NavController.OnDestinationChangedListener() {
-            @Override
-            public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
-                Timber.d("\n   Destination : %s" , destination.getLabel() + ",   arguments : " + arguments);
-            }
-        });
+        NavHostFragment.findNavController(this).addOnDestinationChangedListener(onDestinationChangedListener);
 
     }
 
+    NavController.OnDestinationChangedListener onDestinationChangedListener = new NavController.OnDestinationChangedListener() {
+        @Override
+        public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
+            Timber.d("\n   Destination : %s" , destination.getLabel() + ",   arguments : " + arguments);
+            if (destination.getLabel().equals("fragment_add_edit_task")) {
+                Timber.d("ADD_EDIT_TASK_FRAGMENT in ADD_EDIT_FRAGMENT");
+                fab.setImageDrawable(getActivity().getDrawable(R.drawable.ic_menu_send));
+                //fab.hide();
+            }
+        }
+    };
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Timber.d("[ onCreate() ]");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Timber.d("[ onDestroy() - DestinationChangedListener Remove ]");
+        NavHostFragment.findNavController(this).removeOnDestinationChangedListener(onDestinationChangedListener);
+    }
+
     private void setupFab(int viewId) {
-        FloatingActionButton fab = getActivity().findViewById(viewId);
+        fab = getActivity().findViewById(viewId);
 
         fab.setOnClickListener(v -> {
             Timber.d("[ Fab.onClick in AddEditTaskFragment ]");
