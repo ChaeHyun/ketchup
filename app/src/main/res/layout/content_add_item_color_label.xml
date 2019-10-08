@@ -41,7 +41,7 @@
             android:gravity="end">
 
             <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/add_item_switch_label"
+                android:id="@+id/add_item_switch_color_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -54,6 +54,7 @@
         android:id="@+id/add_item_radio_group"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="horizontal"
         android:elevation="5dp"
         android:layout_marginTop="20dp"
         android:animateLayoutChanges="true"

@@ -73,6 +73,7 @@ public class MainActivity extends DaggerAppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        toggle.setDrawerIndicatorEnabled(true); // Hamburger icon setting
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
@@ -102,6 +103,7 @@ public class MainActivity extends DaggerAppCompatActivity
 
     @Override
     public void onBackPressed() {
+        Timber.d("onBackPressed");
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
@@ -123,6 +125,7 @@ public class MainActivity extends DaggerAppCompatActivity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        Timber.d("[onOptionItemSelected]  ID 값 : %d", id);
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
@@ -131,6 +134,7 @@ public class MainActivity extends DaggerAppCompatActivity
 
         return super.onOptionsItemSelected(item);
     }
+
 
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -173,7 +177,10 @@ public class MainActivity extends DaggerAppCompatActivity
 
     @Override
     public boolean onSupportNavigateUp() {
+        Timber.d(" NAVIGATE UP is Called!!");
         return Navigation.findNavController(this, R.id.activity_nav_host_fragment).navigateUp();
     }
+
+
 }
 

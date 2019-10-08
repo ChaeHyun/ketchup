@@ -23,6 +23,7 @@
     <string name="item_description">Check you activity</string>
 
 
+    <string name="title">Title</string>
     <string name="desc">Description</string>
     <string name="color_label">Label</string>
     <string name="complete">Complete</string>

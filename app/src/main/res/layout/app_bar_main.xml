@@ -40,6 +40,28 @@
                 app:layout_collapseMode="pin"
                 app:popupTheme="@style/AppTheme.PopupOverlay" />
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/add_item_hint_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_marginStart="40dp"
+                android:layout_marginEnd="40dp"
+                android:layout_marginTop="70dp"
+                android:layout_marginBottom="?attr/actionBarSize"
+                android:textColorHint="@color/colorPrimary"
+                app:hintTextAppearance="@style/EditTextHintAppearance">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/add_item_edit_text_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:inputType="textCapSentences"
+                    android:hint="@string/title" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 

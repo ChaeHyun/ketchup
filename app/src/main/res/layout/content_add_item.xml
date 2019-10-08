@@ -22,7 +22,7 @@
         app:hintTextAppearance="@style/EditTextHintAppearance">
 
         <com.ketchup.CustomEditText
-            android:id="@+id/app_item_edit_text_description"
+            android:id="@+id/add_item_edit_text_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/desc"

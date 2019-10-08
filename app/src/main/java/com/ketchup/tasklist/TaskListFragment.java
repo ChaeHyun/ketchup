@@ -64,12 +64,18 @@ public class TaskListFragment extends DaggerFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Timber.d("[ onCreate() ]");
+        // 옵저버를 한번만 등록하도록 onCreate()에서 작업한다.
+        taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
+        observeFilter();
+        observeLoading();
+        observeTasks();
 
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        Timber.d("[ onAttach ]");
     }
 
     @Override
@@ -102,17 +108,11 @@ public class TaskListFragment extends DaggerFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Timber.d("[ onViewCreated() ]");
-        // setup ViewModel
-        taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
 
         // View Binding.
         setupCollapsingToolbar();
         setupEmptyRecyclerView();
         setupFab();
-
-        observeFilter();
-        observeLoading();
-        observeTasks();
 
         if (getArguments() != null) {
             Timber.d("TASK_FILTER : %d ", getArguments().getInt(TASK_FILTER));
@@ -138,8 +138,9 @@ public class TaskListFragment extends DaggerFragment {
                 pl.anchorGravity = 0;
                 fab.setLayoutParams(pl);
 
+                if (getActivity() != null)
+                    fab.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.ic_add_black_24dp));
                 fab.hide();
-                fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_add_black_24dp));
                 fab.show();
             }
         }
