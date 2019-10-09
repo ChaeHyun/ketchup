@@ -41,6 +41,7 @@ public class TaskListFragment extends DaggerFragment {
     /** Cached 로써 TaskListFragment도 데이터를 홀드하고 있어야 한다.
      * LiveData 값을 그대로 쓰는게 아니라 DeepCopy 를 해야한다. */
     private List<Task> cachedTaskList;
+    private int cachedFilter = 1;
     private TaskAdapter taskAdapter;
 
     private CollapsingToolbarLayout ctl;
@@ -56,6 +57,8 @@ public class TaskListFragment extends DaggerFragment {
 
     public static String TASK_FILTER = "task_filter";
 
+
+
     public TaskListFragment() {
         // Required empty public constructor
     }
@@ -66,6 +69,12 @@ public class TaskListFragment extends DaggerFragment {
         Timber.d("[ onCreate() ]");
         // 옵저버를 한번만 등록하도록 onCreate()에서 작업한다.
         taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
+
+        if (taskListViewModel.getTasks().getValue() != null) {
+            Timber.d("기존 ViewModel에 보관된 TaskList 데이터가 존재한다.");
+            cachedTaskList = taskListViewModel.getTasks().getValue();
+        }
+
         observeFilter();
         observeLoading();
         observeTasks();
@@ -107,7 +116,7 @@ public class TaskListFragment extends DaggerFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Timber.d("[ onViewCreated() ]");
+        Timber.d("[ onViewCreated() ] , cachedFilter : %d", cachedFilter);
 
         // View Binding.
         setupCollapsingToolbar();
@@ -122,7 +131,17 @@ public class TaskListFragment extends DaggerFragment {
         navController.addOnDestinationChangedListener(destinationChangedListener);
 
 
-        taskListViewModel.loadTasks();
+        //taskListViewModel.loadTasks();
+        // AddEditTaskFragment 화면에서 되돌아올때 기존에 보여주던 filtered Data 리스트를 그대로 불러오기 위해서.
+        // 기존에는 fragment resume시 onViewCreated가 새로 불리면서 항상 all data list로 실행되었다.
+        if (cachedTaskList != null && !cachedTaskList.isEmpty()) {
+            Timber.d("Restored from cachedTaskList");
+            taskAdapter.setTasks(cachedTaskList);
+        }
+        else {
+            Timber.d("NEWLY LOADED");
+            loadTasksByFilter(cachedFilter);
+        }
     }
 
     private NavController.OnDestinationChangedListener destinationChangedListener = new NavController.OnDestinationChangedListener() {
@@ -194,24 +213,28 @@ public class TaskListFragment extends DaggerFragment {
         taskListViewModel.getTaskFilter().observe(this, new Observer<Integer>() {
             @Override
             public void onChanged(Integer filter) {
-                Timber.d("[ Type Value Check ] : %d ", filter);
-
-                switch (filter) {
-                    case 1:
-                        // 전체 Task 가져오기
-                        taskListViewModel.loadTasks();
-                        break;
-                    case 2:
-                        // 미완료 Task만 가져오기
-                        taskListViewModel.loadTasksCompleted(false);
-                        break;
-                    case 3:
-                        // 완료된 Task만 가져오기
-                        taskListViewModel.loadTasksCompleted(true);
-                        break;
-                }
+                Timber.d("[ Filter Value Check ] : %d ", filter);
+                cachedFilter = filter;
+                loadTasksByFilter(filter);
             }
         });
+    }
+
+    private void loadTasksByFilter(int filter) {
+        switch (filter) {
+            case 1:
+                // 전체 Task 가져오기
+                taskListViewModel.loadTasks();
+                break;
+            case 2:
+                // 미완료 Task만 가져오기
+                taskListViewModel.loadTasksCompleted(false);
+                break;
+            case 3:
+                // 완료된 Task만 가져오기
+                taskListViewModel.loadTasksCompleted(true);
+                break;
+        }
     }
 
     private void observeLoading() {
@@ -233,6 +256,8 @@ public class TaskListFragment extends DaggerFragment {
             for(Task t : list) {
                 //Timber.d("Task 값 : " + t.getTitle() + "\n");
             }
+
+            cachedTaskList = list;
             taskAdapter.setTasks(list);
         });
     }
