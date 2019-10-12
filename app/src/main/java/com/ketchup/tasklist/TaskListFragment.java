@@ -5,10 +5,6 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.GravityCompat;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
@@ -16,17 +12,18 @@ import androidx.navigation.NavDestination;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.ketchup.AddEditTaskFragment;
+import com.ketchup.addedit.AddEditTaskFragment;
+import com.ketchup.utils.AnchoringFab;
+import com.ketchup.utils.ContextCompatUtils;
 import com.ketchup.DaggerViewModelFactory;
 import com.ketchup.R;
+import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 
 import java.util.List;
@@ -42,12 +39,14 @@ public class TaskListFragment extends DaggerFragment {
     private List<Task> cachedTaskList;
     private int cachedFilter = 1;
     private TaskAdapter taskAdapter;
-
-    private CollapsingToolbarLayout ctl;
     private EmptyRecyclerView recyclerView;
 
     @Inject
     DaggerViewModelFactory viewModelFactory;
+    @Inject
+    ToolbarController toolbarController;
+    @Inject
+    ContextCompatUtils contextCompatUtils;
 
     private TaskListViewModel taskListViewModel;
     private NavController navController;
@@ -74,31 +73,30 @@ public class TaskListFragment extends DaggerFragment {
         observeFilter();
         observeLoading();
         observeTasks();
-
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Timber.d("[ onAttach ]");
+        Timber.i("[ onAttach ]");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Timber.d("[ onResume() ]");
+        Timber.i("[ onResume() ]");
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        Timber.d("[ onPause() ]");
+        Timber.i("[ onPause() ]");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Timber.d("[ onDestroy() ]");
+        Timber.i("[ onDestroy() ]");
         navController.removeOnDestinationChangedListener(destinationChangedListener);
     }
 
@@ -112,21 +110,22 @@ public class TaskListFragment extends DaggerFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Timber.d("[ onViewCreated() ] , cachedFilter : %d", cachedFilter);
+        Timber.i("[ onViewCreated() ] , cachedFilter : %d", cachedFilter);
 
         // View Binding.
-        setupCollapsingToolbar();
+        setupToolbar();
         setupEmptyRecyclerView();
         setupFab();
 
         if (getArguments() != null) {
-            Timber.d("TASK_FILTER : %d ", getArguments().getInt(TASK_FILTER));
-            Timber.d("전송받은 ADD_MODE 값 : " + getArguments().getBoolean("ADD_MODE"));
-            Timber.d("전송받은 NEW_TASK_ID 값 : %s", getArguments().getString(NEW_TASK_ID));
+            Timber.i("TASK_FILTER : %d ", getArguments().getInt(TASK_FILTER));
+            Timber.i("전송받은 ADD_MODE 값 : %s", getArguments().getBoolean("ADD_MODE"));
+            Timber.i("전송받은 NEW_TASK_ID 값 : %s", getArguments().getString(NEW_TASK_ID));
 
-            // ADD_MODE == true , Task가 insert 되었다. 리스트에 추가시켜야한다.
-            // ADD_MODE == false , Task가 update 되었다. 리스트에 아이템을 수정해야한다.
-            // 변화가 생긴 Task의 ID를 넘겨받는다.
+            // if (NEW_TASK_ID != null)
+            // 전송 받은 NEW_TASK_ID 값을 가진 데이터를 꺼내온다. (Observer for the SingleTask)
+            // ADD_MODE == true -> 리스트에 추가.
+            //          == false -> 기존 아이템 정보 갱신.
         }
 
         navController = NavHostFragment.findNavController(this);
@@ -146,30 +145,16 @@ public class TaskListFragment extends DaggerFragment {
             if (destination.getLabel().toString().equals("taskList")) {
                 Timber.d(" TASK_LIST_FRAGMENT ");
 
-                // Disable the anchored position of Floating Action Button
-                CoordinatorLayout.LayoutParams pl = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
-                pl.gravity = Gravity.BOTTOM| GravityCompat.END;
-                pl.setAnchorId(-1);
-                pl.anchorGravity = 0;
-                fab.setLayoutParams(pl);
-
-                if (getActivity() != null)
-                    fab.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.ic_add_black_24dp));
-                fab.hide();
-                fab.show();
+                AnchoringFab anchoringFab = new AnchoringFab(fab.getLayoutParams(), fab);
+                anchoringFab.removeAnchor(contextCompatUtils.getDrawable(R.drawable.ic_add_black_24dp));
             }
         }
     };
 
-    private void setupCollapsingToolbar() {
+    private void setupToolbar() {
         if (getActivity() != null) {
-            // Collapsing Toolbar 인스턴스 얻어오기 from MainActivity's View
-            ctl = getActivity().findViewById(R.id.activity_main_collapsing_toolbar);
-            ctl.setTitle("TaskListScreen");
-            ctl.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.yellow));
-
-            Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
-            toolbar.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.yellow));
+            toolbarController.setTitle("TaskListScreen");
+            toolbarController.setToolbarColor(contextCompatUtils.getColor(R.color.green));
         }
     }
 

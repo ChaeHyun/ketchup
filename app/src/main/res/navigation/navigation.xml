@@ -24,7 +24,7 @@
     </fragment>
     <fragment
         android:id="@+id/addEditTaskFragment"
-        android:name="com.ketchup.AddEditTaskFragment"
+        android:name="com.ketchup.addedit.AddEditTaskFragment"
         android:label="fragment_add_edit_task"
         tools:layout="@layout/fragment_add_edit_task" >
 

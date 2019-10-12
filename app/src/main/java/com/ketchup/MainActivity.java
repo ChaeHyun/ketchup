@@ -3,22 +3,19 @@ package com.ketchup;
 
 import android.os.Bundle;
 
-import com.google.android.material.appbar.CollapsingToolbarLayout;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.GravityCompat;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 
 import android.view.MenuItem;
 
 import com.google.android.material.navigation.NavigationView;
 import com.ketchup.tasklist.TaskListFragment;
 import com.ketchup.tasklist.TaskListViewModel;
+import com.ketchup.utils.ToolbarController;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
@@ -37,10 +34,11 @@ public class MainActivity extends DaggerAppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     NavController navController;
-    TaskListViewModel taskListViewModel;
+    private TaskListViewModel viewModel;
 
     @Inject
     DaggerViewModelFactory viewModelFactory;
+    ToolbarController toolbarController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,57 +46,53 @@ public class MainActivity extends DaggerAppCompatActivity
         setContentView(R.layout.activity_main);
 
         // setup ViewModel
-        taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
         setupNavController();
         setupDrawerLayout();
-
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // DestinationChangedListener listener 해제해줘야한다.
+        navController.removeOnDestinationChangedListener(destinationChangedListener);
+        toolbarController.removeDrawerListener(toolbarController.getToggle());
     }
 
     private void setupDrawerLayout() {
         // Setup Toolbar
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        CollapsingToolbarLayout ctl = findViewById(R.id.activity_main_collapsing_toolbar);
-        ctl.setTitle("Collapsing Toolbar");
+        toolbarController = new ToolbarController(this);
+        setSupportActionBar(toolbarController.getToolbar());
 
         /// Setup Navigation Drawer
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        toggle.setDrawerIndicatorEnabled(true); // Hamburger icon setting
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
+        toolbarController.setDrawerIndicatorEnabled(true);
+        toolbarController.addDrawerListener(toolbarController.getToggle());
+        toolbarController.toggleSyncState();
         navigationView.setNavigationItemSelectedListener(this);
-
-        NavigationUI.setupActionBarWithNavController(this, navController, drawer);
+        NavigationUI.setupActionBarWithNavController(this, navController, toolbarController.getDrawer());
     }
 
     private void setupNavController() {
         navController = Navigation.findNavController(this, R.id.activity_nav_host_fragment);
-        navController.addOnDestinationChangedListener(new NavController.OnDestinationChangedListener() {
-            @Override
-            public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
-                /* Remove later : BackStack Logging */
-                Timber.d("[onDestinationChanged ] : %s", destination.getLabel());
+        navController.addOnDestinationChangedListener(destinationChangedListener);
+    }
 
-                /*
-                // To check BackStack state
-                Timber.d("BackStack Cnt : %d", getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryCount());
-                int size = getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryCount();
-                for (int i = 0; i < size; i++) {
-                    Timber.d(getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryAt(i).getName());
-                }
-                */
-            }
-        });
+    NavController.OnDestinationChangedListener destinationChangedListener = new NavController.OnDestinationChangedListener() {
+        @Override
+        public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
+            /* Remove later : BackStack Logging */
+            Timber.d("[onDestinationChanged ] : %s", destination.getLabel());
+            //backstackLog();
+        }
+    };
+
+    private void backstackLog() {
+        // To check BackStack state
+        Timber.d("BackStack Cnt : %d", getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryCount());
+        int size = getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryCount();
+        for (int i = 0; i < size; i++) {
+            Timber.d(getSupportFragmentManager().findFragmentById(R.id.activity_nav_host_fragment).getChildFragmentManager().getBackStackEntryAt(i).getName());
+        }
     }
 
     @Override
@@ -145,22 +139,25 @@ public class MainActivity extends DaggerAppCompatActivity
 
         if (id == R.id.nav_home) {
             Toast.makeText(this, "1번 메뉴 선택", Toast.LENGTH_LONG).show();
+            toolbarController.setTitle("ALL Tasks");
 
-            taskListViewModel.setTaskType(1);
+            viewModel.setTaskType(1);
 
         } else if (id == R.id.nav_gallery) {
             Toast.makeText(this, "2번 메뉴 선택", Toast.LENGTH_LONG).show();
+            toolbarController.setTitle("Uncompleted");
 
             Bundle bundle = new Bundle();
             bundle.putInt(TaskListFragment.TASK_FILTER, 5);
 
             Navigation.findNavController(this, R.id.activity_nav_host_fragment).navigate(R.id.action_task_list_self, bundle);
-            taskListViewModel.setTaskType(2);
+            viewModel.setTaskType(2);
 
         } else if (id == R.id.nav_slideshow) {
             Toast.makeText(this, "3번 메뉴 선택", Toast.LENGTH_LONG).show();
+            toolbarController.setTitle("Completed");
 
-            taskListViewModel.setTaskType(3);
+            viewModel.setTaskType(3);
 
         } else if (id == R.id.nav_tools) {
 

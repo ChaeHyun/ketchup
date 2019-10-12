@@ -1,4 +1,4 @@
-package com.ketchup;
+package com.ketchup.addedit;
 
 import android.content.Context;
 import android.util.AttributeSet;

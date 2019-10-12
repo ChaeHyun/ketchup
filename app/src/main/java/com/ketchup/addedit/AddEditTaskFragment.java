@@ -1,7 +1,6 @@
-package com.ketchup;
+package com.ketchup.addedit;
 
 
-import android.animation.Animator;
 import android.animation.LayoutTransition;
 import android.os.Bundle;
 
@@ -9,20 +8,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.appcompat.widget.Toolbar;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.fragment.NavHostFragment;
 
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -31,10 +23,12 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
-import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
+import com.ketchup.utils.AnchoringFab;
+import com.ketchup.utils.ContextCompatUtils;
+import com.ketchup.DaggerViewModelFactory;
+import com.ketchup.R;
+import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 import com.ketchup.tasklist.TaskListFragment;
 
@@ -68,13 +62,15 @@ public class AddEditTaskFragment extends DaggerFragment
 
     @Inject
     DaggerViewModelFactory viewModelFactory;
-    AddEditTaskViewModel viewModel;
-
-    private FloatingActionButton fab;
+    private AddEditTaskViewModel viewModel;
 
     // Toolbar
-    private CollapsingToolbarLayout ctl;
-    private Toolbar toolbar;
+    @Inject
+    ToolbarController toolbarController;
+    @Inject
+    ContextCompatUtils contextCompatUtils;
+
+    private FloatingActionButton fab;
 
     // Task Info
     private EditText titleEditText;
@@ -94,12 +90,7 @@ public class AddEditTaskFragment extends DaggerFragment
     // 3 Switch Button On/Off Layout
     private LinearLayout[] switchLayout = new LinearLayout[3];
 
-    // Title Layout
-    private TextInputLayout titleLayout;
-
     private ActionBarDrawerToggle toggle;       // DrawerLayout Listener
-    private DrawerLayout drawer;
-
     private NavController navController;
 
     public AddEditTaskFragment() {
@@ -123,10 +114,12 @@ public class AddEditTaskFragment extends DaggerFragment
         //fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_add_black_24dp));
         Timber.d("[ onDestroy() - DestinationChangedListener Remove ]");
         // Title이 MainActivity에 속하기 때문에 따로 관리해줘야한다.
-        resetTitleLayout(titleLayout, titleEditText);
+        //resetTitleLayout(titleLayout, titleEditText);
+        toolbarController.setupTitleLayout(View.GONE, null, null);
         NavHostFragment.findNavController(this).removeOnDestinationChangedListener(onDestinationChangedListener);
 
-        drawer.removeDrawerListener(toggle);
+        //drawer.removeDrawerListener(toggle);
+        toolbarController.removeDrawerListener(toggle);
 
     }
 
@@ -195,7 +188,7 @@ public class AddEditTaskFragment extends DaggerFragment
         inputTask.setDescription(descriptionEditText.getText().toString());
         inputTask.setCompleted(switchOfCompleteButton.isChecked());
         int colorLabelCheckedId = radioGroup.getCheckedRadioButtonId();
-        int color = colorLabelCheckedId == -1 ? TOOLBAR_DEFAULT_COLOR : convertButtonBackgroundColorToColorInteger(colorLabelCheckedId);
+        int color = colorLabelCheckedId == -1 ? TOOLBAR_DEFAULT_COLOR : contextCompatUtils.convertButtonBackgroundColorToColorInteger(colorLabelCheckedId);
 
 
         // DueDate part later
@@ -213,9 +206,6 @@ public class AddEditTaskFragment extends DaggerFragment
     }
 
     private String saveTaskInDatabase(boolean addMode) {
-        // addMode == true -> new Task
-        // addMode == false means editMode -> update Task
-
         if (isTitleEmpty(titleEditText)) {
             titleEditText.setError(getResources().getString(R.string.title_error));
             return ERR_TITLE_EMPTY;
@@ -265,21 +255,11 @@ public class AddEditTaskFragment extends DaggerFragment
             if (destination.getLabel().equals("fragment_add_edit_task")) {
                 Timber.d("ADD_EDIT_TASK_FRAGMENT in ADD_EDIT_FRAGMENT");
 
-                // make an anchor to "appbar"
-                CoordinatorLayout.LayoutParams pl = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
-                pl.setAnchorId(R.id.appbar);
-                pl.anchorGravity = Gravity.BOTTOM | GravityCompat.END;
-                pl.gravity = 0;
-                fab.setLayoutParams(pl);
-
-                // method로 만들기
-                fab.hide();
-                fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_menu_send));
-                fab.show();
+                AnchoringFab anchoringFab = new AnchoringFab(fab.getLayoutParams(), fab);
+                anchoringFab.addAnchor(R.id.appbar, contextCompatUtils.getDrawable(R.drawable.ic_menu_send));
             }
         }
     };
-
 
 
     @Override
@@ -308,12 +288,13 @@ public class AddEditTaskFragment extends DaggerFragment
         switch (viewId) {
             case R.id.add_item_switch_color_label:
                 setLayoutVisibleWithAnimations(radioGroup,700, 500, isChecked);
+
                 if (!isChecked) {
                     if (radioGroup.getCheckedRadioButtonId() != -1) {
                         RadioButton rb = getActivity().findViewById(radioGroup.getCheckedRadioButtonId());
                         rb.setChecked(false);
                     }
-                    toolbarColorChange(ctl, toolbar, TOOLBAR_DEFAULT_COLOR);
+                    toolbarController.setToolbarColor(TOOLBAR_DEFAULT_COLOR);
                 } else {
                     //hideKeyboard
                 }
@@ -322,7 +303,6 @@ public class AddEditTaskFragment extends DaggerFragment
             case R.id.add_item_switch_reminder:
                 setLayoutVisibleWithAnimations(reminderLayout,500,500,isChecked);
                 break;
-
         }
 
     }
@@ -330,54 +310,16 @@ public class AddEditTaskFragment extends DaggerFragment
     private void setLayoutVisibleWithAnimations(View view, long showUpDuration, long disappearDuration, boolean isChecked) {
         float showUpAlpha = 1.0f;
         float disappearAlpha = 0.0f;
+        LayoutAnim layoutAnim = new LayoutAnim(view, isChecked);
+
         if (isChecked) {
             view.animate().alpha(showUpAlpha)
                     .setDuration(showUpDuration)
-                    .setListener(new Animator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart(Animator animation) {
-                            view.setVisibility(View.VISIBLE);
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationCancel(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animator animation) {
-
-                        }
-                    });
+                    .setListener(layoutAnim);
         } else {
             view.animate().alpha(disappearAlpha)
                     .setDuration(disappearDuration)
-                    .setListener(new Animator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            view.setVisibility(View.GONE);
-                        }
-
-                        @Override
-                        public void onAnimationCancel(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animator animation) {
-
-                        }
-                    });
+                    .setListener(layoutAnim);
         }
 
     }
@@ -404,34 +346,17 @@ public class AddEditTaskFragment extends DaggerFragment
 
 
     private void setupDrawerAndToolbar() {
-        if (getActivity() == null)
-            return;
+        toolbarController.setTitle("");
+        TOOLBAR_DEFAULT_COLOR = contextCompatUtils.getColor(R.color.addItemToolbar);
+        toolbarController.setToolbarColor(TOOLBAR_DEFAULT_COLOR);
+        toolbarController.setupTitleLayout(View.VISIBLE, null, null);
 
-        // Toolbar findViewById - it contains in MainActivity.
-        ctl = getActivity().findViewById(R.id.activity_main_collapsing_toolbar);
-        toolbar = getActivity().findViewById(R.id.toolbar);
-
-        ctl.setTitle("");
-        toolbar.setTitle("");
-
-
-        TOOLBAR_DEFAULT_COLOR = ContextCompat.getColor(getActivity(), R.color.addItemToolbar);
-        toolbarColorChange(ctl, toolbar, TOOLBAR_DEFAULT_COLOR);
-
-        titleLayout = getActivity().findViewById(R.id.add_item_hint_title);
-        titleLayout.setVisibility(View.VISIBLE);
-
-
-        drawer = getActivity().findViewById(R.id.drawer_layout);
-        toggle = new ActionBarDrawerToggle(getActivity(), drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-
-        toggle.setDrawerIndicatorEnabled(false);
-        toggle.setToolbarNavigationClickListener(v -> {
+        toolbarController.setDrawerIndicatorEnabled(false);
+        toolbarController.addToolbarOnClickListener(v -> {
             navController.navigateUp();
-            toggle.setDrawerIndicatorEnabled(true);
-
+            toolbarController.setDrawerIndicatorEnabled(true);
         });
-        drawer.addDrawerListener(toggle);
+        toolbarController.addDrawerListener(toggle);
     }
 
     private void setupColorLabelArea() {
@@ -445,8 +370,9 @@ public class AddEditTaskFragment extends DaggerFragment
             radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
-                    final int color = convertButtonBackgroundColorToColorInteger(checkedId);
-                    toolbarColorChange(ctl, toolbar, color);
+                    final int color = contextCompatUtils.convertButtonBackgroundColorToColorInteger(checkedId);
+                    //toolbarColorChange(ctl, toolbar, color);
+                    toolbarController.setToolbarColor(color);
                 }
             });
 
@@ -482,45 +408,4 @@ public class AddEditTaskFragment extends DaggerFragment
                 switchLayout[i].setOnClickListener(this);
         }
     }
-
-    private void toolbarColorChange(CollapsingToolbarLayout ctl, Toolbar toolbar, int color) {
-        ctl.setBackgroundColor(color);
-        toolbar.setBackgroundColor(color);
-    }
-
-    private void resetTitleLayout(TextInputLayout titleLayout, EditText titleEditText) {
-        titleLayout.setVisibility(View.GONE);
-        titleEditText.setText(null);
-        titleEditText.setError(null);
-    }
-
-    private int convertButtonBackgroundColorToColorInteger(int checkedButtonId) {
-        if (getActivity() == null)
-            return -1;
-        // Default Color
-        int color = TOOLBAR_DEFAULT_COLOR;
-
-        switch (checkedButtonId) {
-            case R.id.label_red :
-                color = ContextCompat.getColor(getActivity(), R.color.labelRed);
-                break;
-            case R.id.label_blue:
-                color = ContextCompat.getColor(getActivity(), R.color.labelBlue);
-                break;
-            case R.id.label_green:
-                color = ContextCompat.getColor(getActivity(), R.color.labelGreen);
-                break;
-            case R.id.label_yellow:
-                color = ContextCompat.getColor(getActivity(), R.color.labelYellow);
-                break;
-            case R.id.label_purple:
-                color = ContextCompat.getColor(getActivity(), R.color.labelPurple);
-                break;
-        }
-
-        return color;
-    }
-
-
-
 }
