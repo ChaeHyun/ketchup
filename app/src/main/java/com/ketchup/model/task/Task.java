@@ -4,6 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
+import androidx.room.TypeConverters;
+
+import java.util.Date;
 
 @Entity(tableName="task")
 public class Task {
@@ -13,9 +16,16 @@ public class Task {
 
     private String title;
     private String description;
-    private String writtenDate;
+    private Date writtenDate;
     private boolean completed;
 
+    public Task(String uuid) {
+        this.uuid = uuid;
+        this.title= "";
+        this.completed = false;
+    }
+
+    @Ignore
     public Task(String uuid, String title) {
         this.uuid = uuid;
         this.title = title;
@@ -55,11 +65,11 @@ public class Task {
         this.description = description;
     }
 
-    public String getWrittenDate() {
+    public Date getWrittenDate() {
         return writtenDate;
     }
 
-    public void setWrittenDate(String writtenDate) {
+    public void setWrittenDate(Date writtenDate) {
         this.writtenDate = writtenDate;
     }
 
