@@ -1,4 +1,4 @@
-package com.ketchup;
+package com.ketchup.utils;
 
 import android.content.Context;
 import android.text.format.DateFormat;

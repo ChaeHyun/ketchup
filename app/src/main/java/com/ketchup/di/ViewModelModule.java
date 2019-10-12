@@ -3,7 +3,7 @@ package com.ketchup.di;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.ketchup.AddEditTaskViewModel;
+import com.ketchup.addedit.AddEditTaskViewModel;
 import com.ketchup.DaggerViewModelFactory;
 import com.ketchup.tasklist.TaskListViewModel;
 

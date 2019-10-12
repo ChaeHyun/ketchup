@@ -9,7 +9,7 @@ import dagger.android.ContributesAndroidInjector;
 abstract class ActivityBinder {
 
     @ActivityScope
-    @ContributesAndroidInjector(modules = { ViewModelModule.class, FragmentsModule.class })
+    @ContributesAndroidInjector(modules = { ActivityModule.class, ViewModelModule.class, FragmentsModule.class })
     abstract MainActivity bindMainActivity();
 
 }

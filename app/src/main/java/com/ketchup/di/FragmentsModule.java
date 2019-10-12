@@ -1,6 +1,6 @@
 package com.ketchup.di;
 
-import com.ketchup.AddEditTaskFragment;
+import com.ketchup.addedit.AddEditTaskFragment;
 import com.ketchup.tasklist.TaskListFragment;
 
 import dagger.Module;
