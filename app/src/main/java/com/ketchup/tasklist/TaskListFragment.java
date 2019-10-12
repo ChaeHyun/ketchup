@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -38,8 +39,6 @@ import timber.log.Timber;
 
 public class TaskListFragment extends DaggerFragment {
 
-    /** Cached 로써 TaskListFragment도 데이터를 홀드하고 있어야 한다.
-     * LiveData 값을 그대로 쓰는게 아니라 DeepCopy 를 해야한다. */
     private List<Task> cachedTaskList;
     private int cachedFilter = 1;
     private TaskAdapter taskAdapter;
@@ -56,7 +55,7 @@ public class TaskListFragment extends DaggerFragment {
     private FloatingActionButton fab;
 
     public static String TASK_FILTER = "task_filter";
-
+    public static String NEW_TASK_ID = "new_task_id";
 
 
     public TaskListFragment() {
@@ -67,13 +66,10 @@ public class TaskListFragment extends DaggerFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Timber.d("[ onCreate() ]");
-        // 옵저버를 한번만 등록하도록 onCreate()에서 작업한다.
         taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
 
-        if (taskListViewModel.getTasks().getValue() != null) {
-            Timber.d("기존 ViewModel에 보관된 TaskList 데이터가 존재한다.");
+        if (taskListViewModel.getTasks().getValue() != null)
             cachedTaskList = taskListViewModel.getTasks().getValue();
-        }
 
         observeFilter();
         observeLoading();
@@ -125,23 +121,23 @@ public class TaskListFragment extends DaggerFragment {
 
         if (getArguments() != null) {
             Timber.d("TASK_FILTER : %d ", getArguments().getInt(TASK_FILTER));
+            Timber.d("전송받은 ADD_MODE 값 : " + getArguments().getBoolean("ADD_MODE"));
+            Timber.d("전송받은 NEW_TASK_ID 값 : %s", getArguments().getString(NEW_TASK_ID));
+
+            // ADD_MODE == true , Task가 insert 되었다. 리스트에 추가시켜야한다.
+            // ADD_MODE == false , Task가 update 되었다. 리스트에 아이템을 수정해야한다.
+            // 변화가 생긴 Task의 ID를 넘겨받는다.
         }
 
         navController = NavHostFragment.findNavController(this);
         navController.addOnDestinationChangedListener(destinationChangedListener);
 
 
-        //taskListViewModel.loadTasks();
-        // AddEditTaskFragment 화면에서 되돌아올때 기존에 보여주던 filtered Data 리스트를 그대로 불러오기 위해서.
-        // 기존에는 fragment resume시 onViewCreated가 새로 불리면서 항상 all data list로 실행되었다.
-        if (cachedTaskList != null && !cachedTaskList.isEmpty()) {
-            Timber.d("Restored from cachedTaskList");
+        if (cachedTaskList != null && !cachedTaskList.isEmpty())
             taskAdapter.setTasks(cachedTaskList);
-        }
-        else {
-            Timber.d("NEWLY LOADED");
-            loadTasksByFilter(cachedFilter);
-        }
+        else
+            loadTasksByFilter(cachedFilter);        // When TaskListFragment is created for the first time
+
     }
 
     private NavController.OnDestinationChangedListener destinationChangedListener = new NavController.OnDestinationChangedListener() {
@@ -170,6 +166,10 @@ public class TaskListFragment extends DaggerFragment {
             // Collapsing Toolbar 인스턴스 얻어오기 from MainActivity's View
             ctl = getActivity().findViewById(R.id.activity_main_collapsing_toolbar);
             ctl.setTitle("TaskListScreen");
+            ctl.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.yellow));
+
+            Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
+            toolbar.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.yellow));
         }
     }
 
@@ -195,15 +195,15 @@ public class TaskListFragment extends DaggerFragment {
             fab.setOnClickListener(v -> {
                 Timber.d("[ FAB.onClick in TaskListFragment]");
 
-                navigateToAddEditTaskFragment("ADD_MODE", null);
+                navigateToAddEditTaskFragment(true, null);
             });
         }
     }
 
-    private void navigateToAddEditTaskFragment(String mode, String taskId) {
-        Timber.d("[ navigateTo AddEditTaskFragment ] : %s, %s", mode, taskId);
+    private void navigateToAddEditTaskFragment(boolean addMode, String taskId) {
+        Timber.d("[ navigateTo AddEditTaskFragment ] : %s, %s", addMode, taskId);
         Bundle bundle = new Bundle();
-        bundle.putString(AddEditTaskFragment.MODE, mode);
+        bundle.putBoolean(AddEditTaskFragment.NEWLY_ADD, addMode);
         bundle.putString(AddEditTaskFragment.TASK_ID, taskId);
 
         navController.navigate(R.id.action_task_list_to_addEditTaskFragment, bundle);

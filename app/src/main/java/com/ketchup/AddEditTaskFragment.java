@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.fragment.NavHostFragment;
@@ -32,10 +33,15 @@ import android.widget.RadioGroup;
 
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.ketchup.model.task.Task;
 import com.ketchup.tasklist.TaskListFragment;
 
 import java.util.Date;
+import java.util.UUID;
+
+import javax.inject.Inject;
 
 import dagger.android.support.DaggerFragment;
 import timber.log.Timber;
@@ -49,8 +55,20 @@ public class AddEditTaskFragment extends DaggerFragment
 
     private static int TOOLBAR_DEFAULT_COLOR;
 
-    public static final String MODE = "mode";
+    public static final String NEWLY_ADD = "add_mode";
     public static final String TASK_ID = "taskId";
+
+    private static final String ERR_TITLE_EMPTY = "title is empty";
+
+    // MODE
+    private boolean addMode = true;
+    private String taskId = null;
+
+    private Task cachedTask;
+
+    @Inject
+    DaggerViewModelFactory viewModelFactory;
+    AddEditTaskViewModel viewModel;
 
     private FloatingActionButton fab;
 
@@ -61,11 +79,6 @@ public class AddEditTaskFragment extends DaggerFragment
     // Task Info
     private EditText titleEditText;
     private EditText descriptionEditText;
-    private LinearLayout colorLabelLayout;
-    private Date writtenDate;
-    private int colorLabel;
-    private Date dueDate;
-    private boolean complete;
 
     // select Color label things
     private RadioGroup radioGroup;
@@ -93,6 +106,29 @@ public class AddEditTaskFragment extends DaggerFragment
         // Required empty public constructor
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Timber.d("[ onCreate() ]");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        //fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_add_black_24dp));
+        Timber.d("[ onDestroy() - DestinationChangedListener Remove ]");
+        // Title이 MainActivity에 속하기 때문에 따로 관리해줘야한다.
+        resetTitleLayout(titleLayout, titleEditText);
+        NavHostFragment.findNavController(this).removeOnDestinationChangedListener(onDestinationChangedListener);
+
+        drawer.removeDrawerListener(toggle);
+
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -106,6 +142,8 @@ public class AddEditTaskFragment extends DaggerFragment
         super.onViewCreated(view, savedInstanceState);
         Timber.d("[ onViewCreated ]");
 
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(AddEditTaskViewModel.class);
+        observeTask();
 
         setupDrawerAndToolbar();
         setupSwitchLayout();
@@ -117,12 +155,20 @@ public class AddEditTaskFragment extends DaggerFragment
         setupReminderArea();
         setupCompleteArea();
 
+        /** 1. Bundle에 첨부된 값을 찾아보고 MODE 와 TASK_ID 값을 확인한다. */
         // Check Bundle
         if (getArguments() != null) {
-            String mode = getArguments().getString(MODE);
-            String taskId = getArguments().getString(TASK_ID);
+            addMode = getArguments().getBoolean(NEWLY_ADD);
+            taskId = getArguments().getString(TASK_ID);
 
-            Timber.d("[ Check Args. Values ]\nMode -> %s\ntaskId -> %s", mode, taskId);
+            Timber.d("[ Check Args. Values ]\nMode -> %s\ntaskId -> %s", addMode, taskId);
+        }
+
+        if (addMode) {
+            // Task 새로 추가
+        } else {
+            // 기존 Task 정보 불러오기
+            viewModel.loadTaskByUuid(taskId);
         }
 
         // Task 정보 관련 뷰 초기화
@@ -130,6 +176,85 @@ public class AddEditTaskFragment extends DaggerFragment
             titleEditText = getActivity().findViewById(R.id.add_item_edit_text_title);
             descriptionEditText = getActivity().findViewById(R.id.add_item_edit_text_description);
         }
+
+    }
+
+    /** 2. Title.isEmpty() 이면 저장하지 않아야한다. 판단하는 메소드 만들기 */
+    private boolean isTitleEmpty(EditText titleEditText) {
+        if (titleEditText.length() <= 0)
+            return true;
+        return false;
+    }
+
+    /** 3. View에 입력된 값을 Task로 포장해주는 로직을 메소드화한다.
+     * AddMode라면 new Task를 받을 것이고,
+     * EditMode라면 기존의 Task를 받을 것이다. */
+    private Task wrapupUserInputToObject(Task inputTask) {
+        // title, desc, completed , id
+        inputTask.setTitle(titleEditText.getText().toString());
+        inputTask.setDescription(descriptionEditText.getText().toString());
+        inputTask.setCompleted(switchOfCompleteButton.isChecked());
+        int colorLabelCheckedId = radioGroup.getCheckedRadioButtonId();
+        int color = colorLabelCheckedId == -1 ? TOOLBAR_DEFAULT_COLOR : convertButtonBackgroundColorToColorInteger(colorLabelCheckedId);
+
+
+        // DueDate part later
+
+        inputTask.setWrittenDate(new Date());
+
+        return inputTask;
+    }
+
+    private Task makeTaskObject(boolean addMode) {
+        if (addMode)
+            return wrapupUserInputToObject(new Task(UUID.randomUUID().toString()));
+
+        return wrapupUserInputToObject(cachedTask);
+    }
+
+    private String saveTaskInDatabase(boolean addMode) {
+        // addMode == true -> new Task
+        // addMode == false means editMode -> update Task
+
+        if (isTitleEmpty(titleEditText)) {
+            titleEditText.setError(getResources().getString(R.string.title_error));
+            return ERR_TITLE_EMPTY;
+        }
+
+        Task resultTask = makeTaskObject(addMode);
+        Timber.d("[만들어진 Task Obj값 확인]\nid : %s\ntitle : %s\ndesc : %s" +
+                "\ncomp : %s\nwrittenDate : %s",
+                resultTask.getUuid(), resultTask.getTitle(), resultTask.getDescription(),
+                resultTask.isCompleted(), resultTask.getWrittenDate().toString());
+
+        if (addMode) {
+            Timber.d("[ 새로운 Task를 DB에 삽입. ]");
+            viewModel.insertTask(resultTask);
+        }
+        else {
+            viewModel.updateTask(resultTask);
+        }
+
+        return resultTask.getUuid();
+    }
+
+    private void putTaskDataToView(Task task) {
+        // 기존 데이터를 AddEditTaskFragment에 입력하는 과정.
+        titleEditText.setText(task.getTitle());
+        descriptionEditText.setText(task.getDescription());
+        switchOfCompleteButton.setChecked(task.isCompleted());
+
+        // color , due date 나중에 대입하기.
+    }
+
+    private void observeTask() {
+        viewModel.getTask().observe(this, task -> {
+            // set Task data values to the appropriate each views.
+            Timber.d("[Check the Single Task value ] - %s, %s", task.getUuid(), task.getTitle());
+            cachedTask = task;
+            putTaskDataToView(task);
+
+        });
 
     }
 
@@ -155,38 +280,7 @@ public class AddEditTaskFragment extends DaggerFragment
         }
     };
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        //Timber.d("[ onCreate() ]");
-    }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        //fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_add_black_24dp));
-        Timber.d("[ onDestroy() - DestinationChangedListener Remove ]");
-        titleLayout.setVisibility(View.GONE);
-        NavHostFragment.findNavController(this).removeOnDestinationChangedListener(onDestinationChangedListener);
-
-        drawer.removeDrawerListener(toggle);
-
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                Timber.d(" HOME icon Selected.");
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
     @Override
     public void onClick(View v) {
@@ -205,6 +299,7 @@ public class AddEditTaskFragment extends DaggerFragment
 
     }
 
+    /** Listener for SwitchCompat Buttons */
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         // switch가 On/Off 됐을때의 동작
@@ -228,9 +323,6 @@ public class AddEditTaskFragment extends DaggerFragment
                 setLayoutVisibleWithAnimations(reminderLayout,500,500,isChecked);
                 break;
 
-            case R.id.add_item_switch_complete:
-                complete = isChecked;
-                break;
         }
 
     }
@@ -295,12 +387,21 @@ public class AddEditTaskFragment extends DaggerFragment
 
         fab.setOnClickListener(v -> {
             Timber.d("[ Fab.onClick in AddEditTaskFragment ]");
+            String resultTaskId = saveTaskInDatabase(addMode);
 
-            Bundle bundle = new Bundle();
-            bundle.putInt(TaskListFragment.TASK_FILTER, 100);
-            NavHostFragment.findNavController(this).navigate(R.id.action_addEditTaskFragment_to_task_list, bundle);
+            if (!resultTaskId.equals(ERR_TITLE_EMPTY)) {
+                // saveTaskInDatabase 에서 addMode true / false 다 처리하므로
+                // bundle에 추가할 값은 동일하다.
+                Bundle bundle = new Bundle();
+                bundle.putBoolean("ADD_MODE", addMode);
+                Timber.d("전송하는 NEW_TASK_ID 값 : %s", resultTaskId);
+                bundle.putString(TaskListFragment.NEW_TASK_ID, resultTaskId);
+                NavHostFragment.findNavController(this).navigate(R.id.action_addEditTaskFragment_to_task_list, bundle);
+            }
+
         });
     }
+
 
     private void setupDrawerAndToolbar() {
         if (getActivity() == null)
@@ -364,6 +465,8 @@ public class AddEditTaskFragment extends DaggerFragment
     }
 
     private void setupCompleteArea() {
+        if (getActivity() == null)
+            return;
         // Switch Button to complete a task.
         switchOfCompleteButton = getActivity().findViewById(R.id.add_item_switch_complete);
         switchOfCompleteButton.setOnCheckedChangeListener(this);
@@ -385,11 +488,17 @@ public class AddEditTaskFragment extends DaggerFragment
         toolbar.setBackgroundColor(color);
     }
 
+    private void resetTitleLayout(TextInputLayout titleLayout, EditText titleEditText) {
+        titleLayout.setVisibility(View.GONE);
+        titleEditText.setText(null);
+        titleEditText.setError(null);
+    }
+
     private int convertButtonBackgroundColorToColorInteger(int checkedButtonId) {
         if (getActivity() == null)
             return -1;
         // Default Color
-        int color = ContextCompat.getColor(getActivity(), R.color.addItemToolbar);
+        int color = TOOLBAR_DEFAULT_COLOR;
 
         switch (checkedButtonId) {
             case R.id.label_red :
