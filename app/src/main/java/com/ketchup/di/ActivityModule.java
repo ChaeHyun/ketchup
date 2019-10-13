@@ -5,6 +5,7 @@ import android.content.Context;
 
 import com.ketchup.utils.ContextCompatUtils;
 import com.ketchup.MainActivity;
+import com.ketchup.utils.KeypadUtils;
 import com.ketchup.utils.ToolbarController;
 
 
@@ -24,5 +25,11 @@ public class ActivityModule {
     @Provides
     ContextCompatUtils providesContextCompatProvider(Context context) {
         return new ContextCompatUtils(context);
+    }
+
+    @ActivityScope
+    @Provides
+    KeypadUtils providesKeypadUtils(Context context) {
+        return new KeypadUtils(context);
     }
 }

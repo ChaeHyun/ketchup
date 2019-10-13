@@ -2,6 +2,7 @@ package com.ketchup.addedit;
 
 
 import android.animation.LayoutTransition;
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -17,6 +18,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -28,6 +30,7 @@ import com.ketchup.utils.AnchoringFab;
 import com.ketchup.utils.ContextCompatUtils;
 import com.ketchup.DaggerViewModelFactory;
 import com.ketchup.R;
+import com.ketchup.utils.KeypadUtils;
 import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 import com.ketchup.tasklist.TaskListFragment;
@@ -69,6 +72,8 @@ public class AddEditTaskFragment extends DaggerFragment
     ToolbarController toolbarController;
     @Inject
     ContextCompatUtils contextCompatUtils;
+    @Inject
+    KeypadUtils keypadUtils;
 
     private FloatingActionButton fab;
 
@@ -118,7 +123,8 @@ public class AddEditTaskFragment extends DaggerFragment
         toolbarController.setupTitleLayout(View.GONE, null, null);
         NavHostFragment.findNavController(this).removeOnDestinationChangedListener(onDestinationChangedListener);
 
-        //drawer.removeDrawerListener(toggle);
+        keypadUtils.hideKeypad(fab);
+        toolbarController.setDrawerIndicatorEnabled(true);
         toolbarController.removeDrawerListener(toggle);
 
     }
@@ -140,7 +146,7 @@ public class AddEditTaskFragment extends DaggerFragment
 
         setupDrawerAndToolbar();
         setupSwitchLayout();
-        setupFab(R.id.fab);
+
         // **This must be called after initializing fab.
         navController = NavHostFragment.findNavController(this);
         navController.addOnDestinationChangedListener(onDestinationChangedListener);
@@ -159,6 +165,7 @@ public class AddEditTaskFragment extends DaggerFragment
 
         if (addMode) {
             // Task 새로 추가
+            keypadUtils.showKeypad();
         } else {
             // 기존 Task 정보 불러오기
             viewModel.loadTaskByUuid(taskId);
@@ -171,6 +178,7 @@ public class AddEditTaskFragment extends DaggerFragment
         }
 
     }
+
 
     /** 2. Title.isEmpty() 이면 저장하지 않아야한다. 판단하는 메소드 만들기 */
     private boolean isTitleEmpty(EditText titleEditText) {
@@ -254,9 +262,7 @@ public class AddEditTaskFragment extends DaggerFragment
             Timber.d("\n   Destination : %s" , destination.getLabel() + ",   arguments : " + arguments);
             if (destination.getLabel().equals("fragment_add_edit_task")) {
                 Timber.d("ADD_EDIT_TASK_FRAGMENT in ADD_EDIT_FRAGMENT");
-
-                AnchoringFab anchoringFab = new AnchoringFab(fab.getLayoutParams(), fab);
-                anchoringFab.addAnchor(R.id.appbar, contextCompatUtils.getDrawable(R.drawable.ic_menu_send));
+                setupFab(R.id.fab);
             }
         }
     };
@@ -265,14 +271,16 @@ public class AddEditTaskFragment extends DaggerFragment
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-
             case R.id.add_item_color_switch_layout_linear:
+                keypadUtils.hideKeypad(switchOfCompleteButton);
                 switchOfColorLabelButton.performClick();
                 break;
             case R.id.add_item_reminder_switch_layout_linear:
+                keypadUtils.hideKeypad(switchOfReminderButton);
 
                 break;
             case R.id.add_item_complete_switch_layout_linear:
+                keypadUtils.hideKeypad(switchOfCompleteButton);
                 switchOfCompleteButton.performClick();
                 break;
         }
@@ -287,6 +295,7 @@ public class AddEditTaskFragment extends DaggerFragment
 
         switch (viewId) {
             case R.id.add_item_switch_color_label:
+                keypadUtils.hideKeypad(switchOfCompleteButton);
                 setLayoutVisibleWithAnimations(radioGroup,700, 500, isChecked);
 
                 if (!isChecked) {
@@ -301,8 +310,12 @@ public class AddEditTaskFragment extends DaggerFragment
                 break;
 
             case R.id.add_item_switch_reminder:
+                keypadUtils.hideKeypad(switchOfReminderButton);
                 setLayoutVisibleWithAnimations(reminderLayout,500,500,isChecked);
                 break;
+
+            case R.id.add_item_switch_complete:
+                keypadUtils.hideKeypad(switchOfCompleteButton);
         }
 
     }
@@ -325,10 +338,14 @@ public class AddEditTaskFragment extends DaggerFragment
     }
 
     private void setupFab(@NonNull int viewId) {
+        if (getActivity() == null)
+            return;
+
         fab = getActivity().findViewById(viewId);
 
         fab.setOnClickListener(v -> {
             Timber.d("[ Fab.onClick in AddEditTaskFragment ]");
+            keypadUtils.hideKeypad(fab);
             String resultTaskId = saveTaskInDatabase(addMode);
 
             if (!resultTaskId.equals(ERR_TITLE_EMPTY)) {
@@ -340,8 +357,10 @@ public class AddEditTaskFragment extends DaggerFragment
                 bundle.putString(TaskListFragment.NEW_TASK_ID, resultTaskId);
                 NavHostFragment.findNavController(this).navigate(R.id.action_addEditTaskFragment_to_task_list, bundle);
             }
-
         });
+
+        AnchoringFab anchoringFab = new AnchoringFab(fab.getLayoutParams(), fab);
+        anchoringFab.addAnchor(R.id.appbar, contextCompatUtils.getDrawable(R.drawable.ic_menu_send));
     }
 
 
@@ -354,7 +373,7 @@ public class AddEditTaskFragment extends DaggerFragment
         toolbarController.setDrawerIndicatorEnabled(false);
         toolbarController.addToolbarOnClickListener(v -> {
             navController.navigateUp();
-            toolbarController.setDrawerIndicatorEnabled(true);
+            //toolbarController.setDrawerIndicatorEnabled(true);    // onDestroy()에서 하는 것이 더 매끄럽게 동작한다.
         });
         toolbarController.addDrawerListener(toggle);
     }
@@ -371,7 +390,6 @@ public class AddEditTaskFragment extends DaggerFragment
                 @Override
                 public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
                     final int color = contextCompatUtils.convertButtonBackgroundColorToColorInteger(checkedId);
-                    //toolbarColorChange(ctl, toolbar, color);
                     toolbarController.setToolbarColor(color);
                 }
             });

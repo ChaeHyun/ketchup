@@ -1,6 +1,5 @@
 package com.ketchup.utils;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
@@ -10,15 +9,16 @@ import com.ketchup.R;
 
 import javax.inject.Inject;
 
+import timber.log.Timber;
+
 public class ContextCompatUtils {
 
     @Inject
     Context context;
-    private Activity activity;
 
     @Inject
     public ContextCompatUtils(Context context) {
-        //this.activity = activity;
+        Timber.d("ContextCompatUtil is created;");
         this.context = context;
     }
 
