@@ -1,6 +1,7 @@
 package com.ketchup;
 
 
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,8 @@ import androidx.navigation.ui.NavigationUI;
 import android.view.Menu;
 import android.widget.Toast;
 
+import java.util.Locale;
+
 import javax.inject.Inject;
 
 import dagger.android.support.DaggerAppCompatActivity;
@@ -40,6 +43,8 @@ public class MainActivity extends DaggerAppCompatActivity
     DaggerViewModelFactory viewModelFactory;
     ToolbarController toolbarController;
 
+    public static Locale DEVICE_LOCALE;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +54,8 @@ public class MainActivity extends DaggerAppCompatActivity
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
         setupNavController();
         setupDrawerLayout();
+
+        DEVICE_LOCALE = getCurrentLocale();
     }
 
     @Override
@@ -178,6 +185,12 @@ public class MainActivity extends DaggerAppCompatActivity
         return Navigation.findNavController(this, R.id.activity_nav_host_fragment).navigateUp();
     }
 
+    public Locale getCurrentLocale() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            return getApplicationContext().getResources().getConfiguration().getLocales().get(0);
+        else
+            return getApplicationContext().getResources().getConfiguration().locale;
+    }
 
 }
 

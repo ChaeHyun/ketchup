@@ -8,6 +8,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.textfield.TextInputLayout;
 import com.ketchup.R;
@@ -21,8 +22,9 @@ import javax.inject.Inject;
  * */
 public class ToolbarController {
     private DrawerLayout drawer;
-
     private ActionBarDrawerToggle toggle;
+
+    private AppBarLayout appbar;
 
     private CollapsingToolbarLayout ctl;
     private Toolbar toolbar;
@@ -33,6 +35,7 @@ public class ToolbarController {
     @Inject
     public ToolbarController(Activity activity) {
         drawer = activity.findViewById(R.id.drawer_layout);
+        appbar = activity.findViewById(R.id.appbar);
         ctl = activity.findViewById(R.id.activity_main_collapsing_toolbar);
         toolbar = activity.findViewById(R.id.toolbar);
         titleLayout = activity.findViewById(R.id.add_item_hint_title);
@@ -73,6 +76,10 @@ public class ToolbarController {
     }
 
     /** About Toolbar */
+    public void setAppbarExpanded(boolean expanded) {
+        appbar.setExpanded(expanded);
+    }
+
     public Toolbar getToolbar() {
         return toolbar;
     }

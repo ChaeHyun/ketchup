@@ -13,8 +13,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.ketchup.R;
 import com.ketchup.model.ColorLabel;
 import com.ketchup.model.task.Task;
+import com.ketchup.utils.DateManipulator;
 
 import java.util.List;
+import java.util.Locale;
 
 import timber.log.Timber;
 
@@ -58,10 +60,17 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         holder.titleTextView.setText(item.getTitle());
         holder.descTextView.setText(item.getDescription());
-        holder.colorLabel.setBackgroundColor(ColorLabel.DEFAULT.getColor());
+        holder.colorLabel.setBackgroundColor(item.getColorLabel());
 
         // set dueDate Value later
-        //holder.dueDateTextView.setText("due date");
+        if (item.getDueDate() != null) {
+            DateManipulator dm = new DateManipulator(item.getDueDate(), Locale.KOREA);
+            holder.dueDateTextView.setText(dm.getDateString(item.getDueDate()));
+            holder.dueDateTextView.setVisibility(View.VISIBLE);
+        } else {
+            holder.dueDateTextView.setText(null);
+            holder.dueDateTextView.setVisibility(View.GONE);
+        }
     }
 
     @Override

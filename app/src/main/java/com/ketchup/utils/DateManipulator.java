@@ -8,6 +8,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+
+/** Date 값을 받아서 초기화한 후 Calendar 값을 조작하여 반환하는 클래스 */
 public class DateManipulator {
     public static final String DATE_FORMAT = "yyyy.MM.dd, EEE HH:mm aa";
 
@@ -22,22 +24,50 @@ public class DateManipulator {
     private Date currentTime;
     private Locale locale;
     private Calendar calendar;
-
     private SimpleDateFormat simpleDateFormat;
 
 
     public DateManipulator(Date date, Locale locale) {
-        this.currentTime = date;
+        this.currentTime = (date == null ? new Date() : date);
         this.locale = locale;
 
         this.calendar = Calendar.getInstance();
-        this.calendar.setTime(date);
+        this.calendar.setTime(currentTime);
 
         this.simpleDateFormat = new SimpleDateFormat(DATE_FORMAT, locale);
     }
 
+    public Calendar getCalendar() {
+        return calendar;
+    }
+
+    public void setCalendar(Calendar calendar) {
+        this.calendar = calendar;
+    }
+
     public String getDateString() {
         return simpleDateFormat.format(currentTime);
+    }
+
+    public String getDateString(Date date) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT, locale);
+        return simpleDateFormat.format(date);
+    }
+
+    public String getDateString(Date date, String dateFormat) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat, locale);
+        return simpleDateFormat.format(date);
+    }
+
+    public String get24HourFormatString(Context context) {
+        if (DateFormat.is24HourFormat(context))
+            return DATE_FORMAT_24HOUR;
+
+        return DATE_FORMAT_12HOUR_AM_PM;
+    }
+
+    public Date getTime() {
+        return calendar.getTime();
     }
 
     public int getYear() {
@@ -91,39 +121,30 @@ public class DateManipulator {
         return day;
     }
 
-    /**
-     * static Methods
-     * */
-
-    public static String getDateString(Date date, Locale locale) {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT, locale);
-        return simpleDateFormat.format(date);
-    }
-
-    public static String getDateString(Date date, String dateFormat, Locale locale) {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat, locale);
-        return simpleDateFormat.format(date);
-    }
-
-    public static String get24HourFormatString(Context context) {
-        if (DateFormat.is24HourFormat(context))
-            return DATE_FORMAT_24HOUR;
-
-        return DATE_FORMAT_12HOUR_AM_PM;
-    }
-
-    public static boolean isToday(Calendar now, Calendar target) {
+    public boolean isToday(Calendar now, Calendar target) {
         return ( (now.get(Calendar.YEAR) == target.get(Calendar.YEAR))
                 && (now.get(Calendar.MONTH) == target.get(Calendar.MONTH))
                 && (now.get(Calendar.DATE) == target.get(Calendar.DATE)));
     }
 
-    public static int compareCalendar(Calendar now, Calendar target) {
+    public int compareCalendar(Calendar now, Calendar target) {
         if (isToday(now, target))
-            return IT_IS_TODAY;
+            return IT_IS_TODAY; //0
         else if (target.before(now))
-            return IT_IS_PAST;
+            return IT_IS_PAST;  // -1
         else    // target.after(now)
-            return IT_IS_FUTURE;
+            return IT_IS_FUTURE;    // 1
+    }
+
+    public Date setDate(Calendar cal, Date dueDate, int year, int month, int day) {
+        cal.setTime(dueDate);
+        cal.set(year, month, day);
+        return cal.getTime();
+    }
+
+    public Date setTime(Calendar cal, Date dueDate, int hour, int minute) {
+        cal.setTime(dueDate);
+        cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE), hour, minute, 0);
+        return cal.getTime();
     }
 }

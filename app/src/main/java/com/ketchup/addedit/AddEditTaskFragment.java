@@ -2,7 +2,8 @@ package com.ketchup.addedit;
 
 
 import android.animation.LayoutTransition;
-import android.content.Context;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -15,27 +16,34 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.fragment.NavHostFragment;
 
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TimePicker;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.ketchup.MainActivity;
 import com.ketchup.utils.AnchoringFab;
 import com.ketchup.utils.ContextCompatUtils;
 import com.ketchup.DaggerViewModelFactory;
 import com.ketchup.R;
+import com.ketchup.utils.DateManipulator;
 import com.ketchup.utils.KeypadUtils;
 import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 import com.ketchup.tasklist.TaskListFragment;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -48,7 +56,8 @@ import timber.log.Timber;
  * A simple {@link Fragment} subclass.
  */
 public class AddEditTaskFragment extends DaggerFragment
-        implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+        implements View.OnClickListener, CompoundButton.OnCheckedChangeListener,
+        DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener{
 
     private static int TOOLBAR_DEFAULT_COLOR;
 
@@ -75,11 +84,15 @@ public class AddEditTaskFragment extends DaggerFragment
     @Inject
     KeypadUtils keypadUtils;
 
+    private Date keepDueDate;
+
     private FloatingActionButton fab;
 
     // Task Info
     private EditText titleEditText;
     private EditText descriptionEditText;
+    private EditText dueDatePickEditText;
+    private EditText dueTimePickEditText;
 
     // select Color label things
     private RadioGroup radioGroup;
@@ -116,10 +129,7 @@ public class AddEditTaskFragment extends DaggerFragment
     @Override
     public void onDestroy() {
         super.onDestroy();
-        //fab.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_add_black_24dp));
         Timber.d("[ onDestroy() - DestinationChangedListener Remove ]");
-        // Title이 MainActivity에 속하기 때문에 따로 관리해줘야한다.
-        //resetTitleLayout(titleLayout, titleEditText);
         toolbarController.setupTitleLayout(View.GONE, null, null);
         NavHostFragment.findNavController(this).removeOnDestinationChangedListener(onDestinationChangedListener);
 
@@ -141,20 +151,20 @@ public class AddEditTaskFragment extends DaggerFragment
         super.onViewCreated(view, savedInstanceState);
         Timber.d("[ onViewCreated ]");
 
+
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(AddEditTaskViewModel.class);
         observeTask();
 
         setupDrawerAndToolbar();
         setupSwitchLayout();
 
-        // **This must be called after initializing fab.
         navController = NavHostFragment.findNavController(this);
         navController.addOnDestinationChangedListener(onDestinationChangedListener);
         setupColorLabelArea();
         setupReminderArea();
         setupCompleteArea();
 
-        /** 1. Bundle에 첨부된 값을 찾아보고 MODE 와 TASK_ID 값을 확인한다. */
+
         // Check Bundle
         if (getArguments() != null) {
             addMode = getArguments().getBoolean(NEWLY_ADD);
@@ -163,45 +173,41 @@ public class AddEditTaskFragment extends DaggerFragment
             Timber.d("[ Check Args. Values ]\nMode -> %s\ntaskId -> %s", addMode, taskId);
         }
 
-        if (addMode) {
-            // Task 새로 추가
-            keypadUtils.showKeypad();
-        } else {
-            // 기존 Task 정보 불러오기
-            viewModel.loadTaskByUuid(taskId);
-        }
-
         // Task 정보 관련 뷰 초기화
         if (getActivity() != null) {
             titleEditText = getActivity().findViewById(R.id.add_item_edit_text_title);
             descriptionEditText = getActivity().findViewById(R.id.add_item_edit_text_description);
         }
 
+        if (addMode) {
+            // Task 새로 추가
+            keypadUtils.showKeypad();
+            //viewModel.loadTaskByUuid("e3110931-571e-4357-a80a-8e3853ab1a28");  // test loading
+            keepDueDate = null;
+        } else {
+            // 기존 Task 정보 불러오기
+            viewModel.loadTaskByUuid(taskId);
+        }
+
     }
 
-
-    /** 2. Title.isEmpty() 이면 저장하지 않아야한다. 판단하는 메소드 만들기 */
     private boolean isTitleEmpty(EditText titleEditText) {
-        if (titleEditText.length() <= 0)
-            return true;
-        return false;
+        return (titleEditText.length() <= 0);
     }
 
-    /** 3. View에 입력된 값을 Task로 포장해주는 로직을 메소드화한다.
-     * AddMode라면 new Task를 받을 것이고,
-     * EditMode라면 기존의 Task를 받을 것이다. */
+    /** Make Object things to save */
     private Task wrapupUserInputToObject(Task inputTask) {
         // title, desc, completed , id
         inputTask.setTitle(titleEditText.getText().toString());
         inputTask.setDescription(descriptionEditText.getText().toString());
         inputTask.setCompleted(switchOfCompleteButton.isChecked());
         int colorLabelCheckedId = radioGroup.getCheckedRadioButtonId();
-        int color = colorLabelCheckedId == -1 ? TOOLBAR_DEFAULT_COLOR : contextCompatUtils.convertButtonBackgroundColorToColorInteger(colorLabelCheckedId);
-
+        int color = colorLabelCheckedId == -1 ? TOOLBAR_DEFAULT_COLOR : contextCompatUtils.convertButtonBackgroundColorToColorId(colorLabelCheckedId);
+        inputTask.setColorLabel(color);
 
         // DueDate part later
-
         inputTask.setWrittenDate(new Date());
+        inputTask.setDueDate(keepDueDate);
 
         return inputTask;
     }
@@ -220,10 +226,11 @@ public class AddEditTaskFragment extends DaggerFragment
         }
 
         Task resultTask = makeTaskObject(addMode);
-        Timber.d("[만들어진 Task Obj값 확인]\nid : %s\ntitle : %s\ndesc : %s" +
-                "\ncomp : %s\nwrittenDate : %s",
+        // Check the object is created correctly before put it to the Database.
+        String dueDateCheck = resultTask.getDueDate() == null ? "null" : resultTask.getDueDate().toString();
+        Timber.d("[만들어진 Task Obj값 확인]\nid : %s\ntitle : %s\ndesc : %s\ncomp : %s\nwrittenDate : %s\ndueDate : %s",
                 resultTask.getUuid(), resultTask.getTitle(), resultTask.getDescription(),
-                resultTask.isCompleted(), resultTask.getWrittenDate().toString());
+                resultTask.isCompleted(), resultTask.getWrittenDate().toString(), dueDateCheck);
 
         if (addMode) {
             Timber.d("[ 새로운 Task를 DB에 삽입. ]");
@@ -236,13 +243,71 @@ public class AddEditTaskFragment extends DaggerFragment
         return resultTask.getUuid();
     }
 
-    private void putTaskDataToView(Task task) {
+
+    /** Methods to set dueDate values */
+    private Date setCurrentDueDate() {
+        Timber.d("KeepDueDate == null : 지금 시간 기준으로 디폴트값 세팅");
+        dueDatePickEditText.setText(getResources().getString(R.string.today));
+
+        DateManipulator dm = new DateManipulator(null, MainActivity.DEVICE_LOCALE);
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DATE, dm.getDate());
+
+        String formatHourOfDay = dm.get24HourFormatString(getActivity());
+        if (DateFormat.is24HourFormat(getActivity())) {
+            cal.set(Calendar.HOUR_OF_DAY, cal.get(Calendar.HOUR_OF_DAY) + 1);
+        } else {
+            cal.set(Calendar.HOUR, cal.get(Calendar.HOUR) + 1);
+        }
+
+        dm.setCalendar(cal);
+        dueTimePickEditText.setText(dm.getDateString(cal.getTime(), formatHourOfDay));
+        return cal.getTime();
+    }
+
+
+    private Date setExistingDateValue(Date date) {
+        if (date == null) {
+            return setCurrentDueDate();
+        }
+        DateManipulator dm = new DateManipulator(date, MainActivity.DEVICE_LOCALE);
+
+        String dueDateString = dm.getDateString(date, DateManipulator.DATE_FORMAT_DATE_PICKER);
+        String dueTimeString = dm.getDateString(date, dm.get24HourFormatString(getActivity()));
+        dueDatePickEditText.setText(dueDateString);
+        dueTimePickEditText.setText(dueTimeString);
+
+        return date;
+    }
+
+    /** This method will be called by Callback of Observer.
+     * to restore Task Object Data to its View. */
+    private void restoreTaskDataToView(Task task) {
         // 기존 데이터를 AddEditTaskFragment에 입력하는 과정.
+        Timber.d("기존 Task를 Restore 하기");
         titleEditText.setText(task.getTitle());
         descriptionEditText.setText(task.getDescription());
         switchOfCompleteButton.setChecked(task.isCompleted());
 
-        // color , due date 나중에 대입하기.
+        int color = task.getColorLabel();
+        if (color == Task.DEFAULT_COLOR) {
+            setLayoutVisibleWithAnimations(radioGroup,700, 500, false);
+        } else {
+            setLayoutVisibleWithAnimations(radioGroup,700, 500, true);
+            switchOfColorLabelButton.setChecked(true);
+            radioGroup.check(contextCompatUtils.convertButtonColorToButtonId(color));
+            toolbarController.setToolbarColor(color);
+        }
+
+        // 기존에 DueDate값이 있다면
+        if (task.getDueDate() == null) {
+            setLayoutVisibleWithAnimations(reminderLayout, 500, 500, false);
+        } else {
+            // 레이아웃을 VISIBLE 하게 변경하고 데이터를 입력한다.
+            setLayoutVisibleWithAnimations(reminderLayout, 500, 500, true);
+            switchOfReminderButton.setChecked(true);
+            keepDueDate = task.getDueDate();
+        }
     }
 
     private void observeTask() {
@@ -250,10 +315,8 @@ public class AddEditTaskFragment extends DaggerFragment
             // set Task data values to the appropriate each views.
             Timber.d("[Check the Single Task value ] - %s, %s", task.getUuid(), task.getTitle());
             cachedTask = task;
-            putTaskDataToView(task);
-
+            restoreTaskDataToView(task);
         });
-
     }
 
     private NavController.OnDestinationChangedListener onDestinationChangedListener = new NavController.OnDestinationChangedListener() {
@@ -267,9 +330,11 @@ public class AddEditTaskFragment extends DaggerFragment
         }
     };
 
-
+    /** Listener for View.onClick*/
     @Override
     public void onClick(View v) {
+        DateManipulator currentTimeStandard = new DateManipulator(new Date(), MainActivity.DEVICE_LOCALE);
+
         switch (v.getId()) {
             case R.id.add_item_color_switch_layout_linear:
                 keypadUtils.hideKeypad(switchOfCompleteButton);
@@ -277,22 +342,38 @@ public class AddEditTaskFragment extends DaggerFragment
                 break;
             case R.id.add_item_reminder_switch_layout_linear:
                 keypadUtils.hideKeypad(switchOfReminderButton);
+                switchOfReminderButton.performClick();
 
                 break;
             case R.id.add_item_complete_switch_layout_linear:
                 keypadUtils.hideKeypad(switchOfCompleteButton);
                 switchOfCompleteButton.performClick();
                 break;
-        }
 
+            case R.id.add_item_due_date_reminder:
+                // 오늘 날짜 기준.
+                int year = currentTimeStandard.getYear();
+                int month = currentTimeStandard.getMonth();
+                int day = currentTimeStandard.getDate();
+
+                DatePickerDialog datePickerDialog = new DatePickerDialog(getActivity(), this, year, month-1, day);
+                datePickerDialog.show();
+
+                break;
+            case R.id.add_item_due_time_reminder:
+                int hour = currentTimeStandard.getHour() + 1;
+                int minute = currentTimeStandard.getMinute();
+
+                TimePickerDialog timePickerDialog = new TimePickerDialog(getActivity(), this, hour, minute, DateFormat.is24HourFormat(getActivity()));
+                timePickerDialog.show();
+                break;
+        }
     }
 
     /** Listener for SwitchCompat Buttons */
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        // switch가 On/Off 됐을때의 동작
         int viewId = buttonView.getId();
-
         switch (viewId) {
             case R.id.add_item_switch_color_label:
                 keypadUtils.hideKeypad(switchOfCompleteButton);
@@ -304,14 +385,13 @@ public class AddEditTaskFragment extends DaggerFragment
                         rb.setChecked(false);
                     }
                     toolbarController.setToolbarColor(TOOLBAR_DEFAULT_COLOR);
-                } else {
-                    //hideKeyboard
                 }
                 break;
 
             case R.id.add_item_switch_reminder:
                 keypadUtils.hideKeypad(switchOfReminderButton);
                 setLayoutVisibleWithAnimations(reminderLayout,500,500,isChecked);
+                setExistingDateValue(keepDueDate);
                 break;
 
             case R.id.add_item_switch_complete:
@@ -363,8 +443,8 @@ public class AddEditTaskFragment extends DaggerFragment
         anchoringFab.addAnchor(R.id.appbar, contextCompatUtils.getDrawable(R.drawable.ic_menu_send));
     }
 
-
     private void setupDrawerAndToolbar() {
+        toolbarController.setAppbarExpanded(true);
         toolbarController.setTitle("");
         TOOLBAR_DEFAULT_COLOR = contextCompatUtils.getColor(R.color.addItemToolbar);
         toolbarController.setToolbarColor(TOOLBAR_DEFAULT_COLOR);
@@ -389,7 +469,7 @@ public class AddEditTaskFragment extends DaggerFragment
             radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
-                    final int color = contextCompatUtils.convertButtonBackgroundColorToColorInteger(checkedId);
+                    final int color = contextCompatUtils.convertButtonBackgroundColorToColorId(checkedId);
                     toolbarController.setToolbarColor(color);
                 }
             });
@@ -405,6 +485,11 @@ public class AddEditTaskFragment extends DaggerFragment
 
             switchOfReminderButton = getActivity().findViewById(R.id.add_item_switch_reminder);
             switchOfReminderButton.setOnCheckedChangeListener(this);
+
+            dueDatePickEditText = getActivity().findViewById(R.id.add_item_due_date_reminder);
+            dueTimePickEditText = getActivity().findViewById(R.id.add_item_due_time_reminder);
+            dueDatePickEditText.setOnClickListener(this);
+            dueTimePickEditText.setOnClickListener(this);
         }
     }
 
@@ -425,5 +510,41 @@ public class AddEditTaskFragment extends DaggerFragment
             for (int i = 0; i < switchLayout.length; i++)
                 switchLayout[i].setOnClickListener(this);
         }
+    }
+
+
+    @Override
+    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+        DateManipulator dm = new DateManipulator(keepDueDate, MainActivity.DEVICE_LOCALE);
+
+        Calendar calendarNow = Calendar.getInstance();
+        Calendar reminderCalendar = Calendar.getInstance();
+        reminderCalendar.set(year, month, dayOfMonth);
+
+        if (dm.compareCalendar(calendarNow, reminderCalendar) < 0) {
+            Toast.makeText(getActivity(), getString(R.string.before_today), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        keepDueDate = dm.setDate(reminderCalendar, keepDueDate, year, month, dayOfMonth);
+        dueDatePickEditText.setText(dm.getDateString(keepDueDate, DateManipulator.DATE_FORMAT_DATE_PICKER));
+    }
+
+    @Override
+    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+        DateManipulator dm = new DateManipulator(keepDueDate, MainActivity.DEVICE_LOCALE);
+        Calendar calendarNow = Calendar.getInstance();
+        Calendar reminderCalendar = Calendar.getInstance();
+
+        reminderCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        reminderCalendar.set(Calendar.MINUTE, minute);
+
+        if (reminderCalendar.before(calendarNow)) {
+            Toast.makeText(getActivity(), getString(R.string.before_today), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        keepDueDate = dm.setTime(reminderCalendar, keepDueDate, hourOfDay, minute);
+        dueTimePickEditText.setText(dm.getDateString(keepDueDate, dm.get24HourFormatString(getActivity())));
     }
 }

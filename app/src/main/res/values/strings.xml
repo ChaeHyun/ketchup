@@ -30,4 +30,7 @@
     <string name="reminder">Reminder</string>
 
     <string name="title_error">Title is Empty.</string>
+
+    <string name="today">Today</string>
+    <string name="before_today">현재보다 이전 시간은 설정할 수 없습니다.</string>
 </resources>

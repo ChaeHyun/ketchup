@@ -26,7 +26,7 @@ public class ContextCompatUtils {
         return ContextCompat.getColor(context, resId);
     }
 
-    public int convertButtonBackgroundColorToColorInteger(int colorLabelId) {
+    public int convertButtonBackgroundColorToColorId(int colorLabelId) {
         // Default Color
         int color = ContextCompat.getColor(context, R.color.addItemToolbar);
 
@@ -49,6 +49,20 @@ public class ContextCompatUtils {
         }
 
         return color;
+    }
+
+    public int convertButtonColorToButtonId(int color) {
+        if (color == ContextCompat.getColor(context, R.color.labelRed))
+            return R.id.label_red;
+        if (color == ContextCompat.getColor(context, R.color.labelBlue))
+            return R.id.label_blue;
+        if (color == ContextCompat.getColor(context, R.color.labelGreen))
+            return R.id.label_green;
+        if (color == ContextCompat.getColor(context, R.color.labelYellow))
+            return R.id.label_yellow;
+        if (color == ContextCompat.getColor(context, R.color.labelPurple))
+            return R.id.label_purple;
+        return -1;
     }
 
     public Drawable getDrawable(int drawableId) {
