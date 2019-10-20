@@ -18,6 +18,9 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -119,11 +122,13 @@ public class AddEditTaskFragment extends DaggerFragment
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Timber.d("[ onCreate() ]");
+        setHasOptionsMenu(true);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        getActivity().invalidateOptionsMenu();
     }
 
     @Override
@@ -140,6 +145,34 @@ public class AddEditTaskFragment extends DaggerFragment
     }
 
     @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        menu.clear();
+        inflater.inflate(R.menu.add_edit_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.settings:
+
+                break;
+            case R.id.delete:
+                if (!addMode) {
+                    viewModel.deleteTask(taskId);
+                    Timber.d("삭제 - task delete");
+                    //navController.navigateUp();
+                    navigateToTaskListFragment(addMode, taskId);
+                } else {
+                    Toast.makeText(getActivity(), "삭제할 Task가 없습니다.", Toast.LENGTH_LONG).show();
+                }
+
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -150,7 +183,6 @@ public class AddEditTaskFragment extends DaggerFragment
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Timber.d("[ onViewCreated ]");
-
 
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(AddEditTaskViewModel.class);
         observeTask();
@@ -182,10 +214,10 @@ public class AddEditTaskFragment extends DaggerFragment
         if (addMode) {
             // Task 새로 추가
             keypadUtils.showKeypad();
-            //viewModel.loadTaskByUuid("e3110931-571e-4357-a80a-8e3853ab1a28");  // test loading
             keepDueDate = null;
         } else {
             // 기존 Task 정보 불러오기
+            Timber.d("DB에서 Task 불러오기 : %s", taskId);
             viewModel.loadTaskByUuid(taskId);
         }
 
@@ -313,9 +345,13 @@ public class AddEditTaskFragment extends DaggerFragment
     private void observeTask() {
         viewModel.getTask().observe(this, task -> {
             // set Task data values to the appropriate each views.
-            Timber.d("[Check the Single Task value ] - %s, %s", task.getUuid(), task.getTitle());
-            cachedTask = task;
-            restoreTaskDataToView(task);
+            if (task != null) {
+                Timber.d("[Check the Single Task value ] - %s, %s", task.getUuid(), task.getTitle());
+                cachedTask = task;
+                restoreTaskDataToView(task);
+            } else {
+                Timber.d("Observer에서 Task 읽기 실패.");
+            }
         });
     }
 
@@ -391,7 +427,7 @@ public class AddEditTaskFragment extends DaggerFragment
             case R.id.add_item_switch_reminder:
                 keypadUtils.hideKeypad(switchOfReminderButton);
                 setLayoutVisibleWithAnimations(reminderLayout,500,500,isChecked);
-                setExistingDateValue(keepDueDate);
+                keepDueDate = setExistingDateValue(keepDueDate);
                 break;
 
             case R.id.add_item_switch_complete:
@@ -431,16 +467,20 @@ public class AddEditTaskFragment extends DaggerFragment
             if (!resultTaskId.equals(ERR_TITLE_EMPTY)) {
                 // saveTaskInDatabase 에서 addMode true / false 다 처리하므로
                 // bundle에 추가할 값은 동일하다.
-                Bundle bundle = new Bundle();
-                bundle.putBoolean("ADD_MODE", addMode);
-                Timber.d("전송하는 NEW_TASK_ID 값 : %s", resultTaskId);
-                bundle.putString(TaskListFragment.NEW_TASK_ID, resultTaskId);
-                NavHostFragment.findNavController(this).navigate(R.id.action_addEditTaskFragment_to_task_list, bundle);
+                navigateToTaskListFragment(addMode, resultTaskId);
             }
         });
 
         AnchoringFab anchoringFab = new AnchoringFab(fab.getLayoutParams(), fab);
         anchoringFab.addAnchor(R.id.appbar, contextCompatUtils.getDrawable(R.drawable.ic_menu_send));
+    }
+
+    private void navigateToTaskListFragment(boolean addMode, String taskId) {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("ADD_MODE", addMode);
+        Timber.d("전송하는 NEW_TASK_ID 값 : %s", taskId);
+        bundle.putString(TaskListFragment.NEW_TASK_ID, taskId);
+        NavHostFragment.findNavController(this).navigate(R.id.action_addEditTaskFragment_to_task_list, bundle);
     }
 
     private void setupDrawerAndToolbar() {
@@ -453,7 +493,6 @@ public class AddEditTaskFragment extends DaggerFragment
         toolbarController.setDrawerIndicatorEnabled(false);
         toolbarController.addToolbarOnClickListener(v -> {
             navController.navigateUp();
-            //toolbarController.setDrawerIndicatorEnabled(true);    // onDestroy()에서 하는 것이 더 매끄럽게 동작한다.
         });
         toolbarController.addDrawerListener(toggle);
     }

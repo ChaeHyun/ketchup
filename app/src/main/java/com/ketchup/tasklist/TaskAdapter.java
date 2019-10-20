@@ -1,5 +1,6 @@
 package com.ketchup.tasklist;
 
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,9 +9,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.NavController;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ketchup.R;
+import com.ketchup.addedit.AddEditTaskFragment;
 import com.ketchup.model.ColorLabel;
 import com.ketchup.model.task.Task;
 import com.ketchup.utils.DateManipulator;
@@ -25,9 +28,10 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     private List<Task> itemList;
     private View itemView;
 
+    private NavController navController;
 
-    public TaskAdapter() {
-
+    public TaskAdapter(NavController navController) {
+        this.navController = navController;
     }
 
     public void setTasks(List<Task> tasks) {
@@ -56,8 +60,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task item = itemList.get(position);
 
-        //Timber.d("item : %s", item.getTitle());
-
+//        Timber.d("item : %s", item.getTitle());
+//        Timber.d("taskId : %s", item.getUuid());
+        holder.taskId = item.getUuid();
         holder.titleTextView.setText(item.getTitle());
         holder.descTextView.setText(item.getDescription());
         holder.colorLabel.setBackgroundColor(item.getColorLabel());
@@ -84,9 +89,10 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         private TextView dueDateTextView;
         private TextView descTextView;
         private LinearLayout colorLabel;
+        private String taskId;
 
 
-        private TaskViewHolder(@NonNull View itemView) {
+        public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.task_item_title);
             dueDateTextView = itemView.findViewById(R.id.task_item_due_date);
@@ -95,8 +101,15 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
             // For Testing : On-Click Method
             itemView.setOnClickListener((v) -> {
+                Bundle bundle = new Bundle();
+                bundle.putBoolean(AddEditTaskFragment.NEWLY_ADD, false);
+                bundle.putString(AddEditTaskFragment.TASK_ID, taskId);
+
+                navController.navigate(R.id.action_task_list_to_addEditTaskFragment, bundle);
+
                 String title = titleTextView.getText().toString();
-                Toast.makeText(v.getRootView().getContext(), title + " Clicked!", Toast.LENGTH_LONG).show();
+                Toast.makeText(v.getRootView().getContext(), title + " Clicked!\ntaskId: " + taskId, Toast.LENGTH_LONG).show();
+                Timber.d("[Check] - %s, %s", taskId, title);
             });
         }
     }

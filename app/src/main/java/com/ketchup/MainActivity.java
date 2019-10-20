@@ -77,6 +77,9 @@ public class MainActivity extends DaggerAppCompatActivity
         toolbarController.toggleSyncState();
         navigationView.setNavigationItemSelectedListener(this);
         NavigationUI.setupActionBarWithNavController(this, navController, toolbarController.getDrawer());
+
+        navigationView.getMenu().getItem(0).setChecked(true);
+        viewModel.setTaskType(1);
     }
 
     private void setupNavController() {
@@ -145,6 +148,7 @@ public class MainActivity extends DaggerAppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_home) {
+            Timber.d("1번메뉴 선택");
             Toast.makeText(this, "1번 메뉴 선택", Toast.LENGTH_LONG).show();
             toolbarController.setTitle("ALL Tasks");
 

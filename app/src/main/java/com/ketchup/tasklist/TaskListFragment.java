@@ -121,29 +121,18 @@ public class TaskListFragment extends DaggerFragment {
             Timber.i("TASK_FILTER : %d ", getArguments().getInt(TASK_FILTER));
             Timber.i("전송받은 ADD_MODE 값 : %s", getArguments().getBoolean("ADD_MODE"));
             Timber.i("전송받은 NEW_TASK_ID 값 : %s", getArguments().getString(NEW_TASK_ID));
-
-            // if (NEW_TASK_ID != null)
-            // 전송 받은 NEW_TASK_ID 값을 가진 데이터를 꺼내온다. (Observer for the SingleTask)
-            // ADD_MODE == true -> 리스트에 추가.
-            //          == false -> 기존 아이템 정보 갱신.
         }
 
         navController = NavHostFragment.findNavController(this);
         navController.addOnDestinationChangedListener(destinationChangedListener);
-
-
-        if (cachedTaskList != null && !cachedTaskList.isEmpty())
-            taskAdapter.setTasks(cachedTaskList);
-        else
-            loadTasksByFilter(cachedFilter);        // When TaskListFragment is created for the first time
-
     }
+
 
     private NavController.OnDestinationChangedListener destinationChangedListener = new NavController.OnDestinationChangedListener() {
         @Override
         public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
             if (destination.getLabel().toString().equals("taskList")) {
-                Timber.d(" TASK_LIST_FRAGMENT ");
+                //Timber.d(" TASK_LIST_FRAGMENT ");
 
                 AnchoringFab anchoringFab = new AnchoringFab(fab.getLayoutParams(), fab);
                 anchoringFab.removeAnchor(contextCompatUtils.getDrawable(R.drawable.ic_add_black_24dp));
@@ -160,7 +149,7 @@ public class TaskListFragment extends DaggerFragment {
 
     private void setupEmptyRecyclerView() {
         if (getActivity() != null) {
-            taskAdapter = new TaskAdapter();
+            taskAdapter = new TaskAdapter(NavHostFragment.findNavController(this));
 
             // EmptyRecyclerView Init
             recyclerView = getActivity().findViewById(R.id.fragment_task_list_recycler_view);
@@ -179,7 +168,6 @@ public class TaskListFragment extends DaggerFragment {
 
             fab.setOnClickListener(v -> {
                 Timber.d("[ FAB.onClick in TaskListFragment]");
-
                 navigateToAddEditTaskFragment(true, null);
             });
         }
@@ -209,14 +197,17 @@ public class TaskListFragment extends DaggerFragment {
         switch (filter) {
             case 1:
                 // 전체 Task 가져오기
+                toolbarController.setTitle("All");
                 taskListViewModel.loadTasks();
                 break;
             case 2:
                 // 미완료 Task만 가져오기
+                toolbarController.setTitle("Uncompleted");
                 taskListViewModel.loadTasksCompleted(false);
                 break;
             case 3:
                 // 완료된 Task만 가져오기
+                toolbarController.setTitle("Completed");
                 taskListViewModel.loadTasksCompleted(true);
                 break;
         }
@@ -238,12 +229,20 @@ public class TaskListFragment extends DaggerFragment {
     private void observeTasks() {
         taskListViewModel.getTasks().observe(this, list -> {
             Timber.d("[ Observer in TaskListFragment for List<Task>]");
-            for(Task t : list) {
-                //Timber.d("Task 값 : " + t.getTitle() + "\n");
-            }
+            //listTestPrinting("observerTasks()", list);
 
             cachedTaskList = list;
             taskAdapter.setTasks(list);
         });
+    }
+
+    private void listTestPrinting(String title, List<Task> list) {
+        // cachedTask 출력
+        Timber.d("[ cachedTask 출력 ] : %s", title);
+        if (list != null) {
+            for (int i = 0; i < list.size(); i++) {
+                Timber.d("%d : %s", i, list.get(i).getTitle());
+            }
+        }
     }
 }
