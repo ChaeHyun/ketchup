@@ -125,6 +125,8 @@ public class TaskListFragment extends DaggerFragment {
 
         navController = NavHostFragment.findNavController(this);
         navController.addOnDestinationChangedListener(destinationChangedListener);
+
+        loadTasksByFilter(cachedFilter);
     }
 
 
@@ -176,9 +178,7 @@ public class TaskListFragment extends DaggerFragment {
     private void navigateToAddEditTaskFragment(boolean addMode, String taskId) {
         Timber.d("[ navigateTo AddEditTaskFragment ] : %s, %s", addMode, taskId);
         Bundle bundle = new Bundle();
-        bundle.putBoolean(AddEditTaskFragment.NEWLY_ADD, addMode);
         bundle.putString(AddEditTaskFragment.TASK_ID, taskId);
-
         navController.navigate(R.id.action_task_list_to_addEditTaskFragment, bundle);
     }
 

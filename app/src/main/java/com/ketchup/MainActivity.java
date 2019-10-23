@@ -62,7 +62,7 @@ public class MainActivity extends DaggerAppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         navController.removeOnDestinationChangedListener(destinationChangedListener);
-        toolbarController.removeDrawerListener(toolbarController.getToggle());
+        toolbarController.removeDrawerListener();
     }
 
     private void setupDrawerLayout() {
@@ -73,7 +73,7 @@ public class MainActivity extends DaggerAppCompatActivity
         /// Setup Navigation Drawer
         NavigationView navigationView = findViewById(R.id.nav_view);
         toolbarController.setDrawerIndicatorEnabled(true);
-        toolbarController.addDrawerListener(toolbarController.getToggle());
+        toolbarController.addDrawerListener();
         toolbarController.toggleSyncState();
         navigationView.setNavigationItemSelectedListener(this);
         NavigationUI.setupActionBarWithNavController(this, navController, toolbarController.getDrawer());

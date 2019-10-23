@@ -67,11 +67,11 @@ public class ToolbarController {
         return drawer;
     }
 
-    public void addDrawerListener(ActionBarDrawerToggle toggle) {
+    public void addDrawerListener() {
         drawer.addDrawerListener(toggle);
     }
 
-    public void removeDrawerListener(ActionBarDrawerToggle toggle) {
+    public void removeDrawerListener() {
         drawer.removeDrawerListener(toggle);
     }
 

@@ -46,8 +46,6 @@ import com.ketchup.tasklist.TaskListFragment;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -57,29 +55,23 @@ import timber.log.Timber;
 
 /**
  * A simple {@link Fragment} subclass.
+ * before refactoring : 600 lines. Too many logic in View area. Lets move some logic to viewModel.
  */
 public class AddEditTaskFragment extends DaggerFragment
         implements View.OnClickListener, CompoundButton.OnCheckedChangeListener,
-        DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener{
+        DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
 
-    private static int TOOLBAR_DEFAULT_COLOR;
-
-    public static final String NEWLY_ADD = "add_mode";
     public static final String TASK_ID = "taskId";
 
-    private static final String ERR_TITLE_EMPTY = "title is empty";
+    public static final String SAVED_OK = "task_save_ok";
+    public static final String SAVED_FAIL = "task_save_fail";
 
-    // MODE
-    private boolean addMode = true;
     private String taskId = null;
-
-    private Task cachedTask;
 
     @Inject
     DaggerViewModelFactory viewModelFactory;
     private AddEditTaskViewModel viewModel;
 
-    // Toolbar
     @Inject
     ToolbarController toolbarController;
     @Inject
@@ -88,7 +80,6 @@ public class AddEditTaskFragment extends DaggerFragment
     KeypadUtils keypadUtils;
 
     private Date keepDueDate;
-
     private FloatingActionButton fab;
 
     // Task Info
@@ -100,18 +91,15 @@ public class AddEditTaskFragment extends DaggerFragment
     // select Color label things
     private RadioGroup radioGroup;
     private SwitchCompat switchOfColorLabelButton;
-
     // Reminder things
     private LinearLayout reminderLayout;
     private SwitchCompat switchOfReminderButton;
-
     // Complete things
     private SwitchCompat switchOfCompleteButton;
 
     // 3 Switch Button On/Off Layout
     private LinearLayout[] switchLayout = new LinearLayout[3];
 
-    private ActionBarDrawerToggle toggle;       // DrawerLayout Listener
     private NavController navController;
 
     public AddEditTaskFragment() {
@@ -128,20 +116,25 @@ public class AddEditTaskFragment extends DaggerFragment
     @Override
     public void onResume() {
         super.onResume();
-        getActivity().invalidateOptionsMenu();
+        if (getActivity() != null)
+            getActivity().invalidateOptionsMenu();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         Timber.d("[ onDestroy() - DestinationChangedListener Remove ]");
-        toolbarController.setupTitleLayout(View.GONE, null, null);
         NavHostFragment.findNavController(this).removeOnDestinationChangedListener(onDestinationChangedListener);
-
-        keypadUtils.hideKeypad(fab);
+        toolbarController.setupTitleLayout(View.GONE, null, null);
         toolbarController.setDrawerIndicatorEnabled(true);
-        toolbarController.removeDrawerListener(toggle);
+        toolbarController.removeDrawerListener();
+    }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        Timber.d("[ onPause() - DestinationChangedListener Remove ]");
+        keypadUtils.hideKeypad(fab);
     }
 
     @Override
@@ -158,15 +151,12 @@ public class AddEditTaskFragment extends DaggerFragment
 
                 break;
             case R.id.delete:
-                if (!addMode) {
-                    viewModel.deleteTask(taskId);
-                    Timber.d("삭제 - task delete");
-                    //navController.navigateUp();
-                    navigateToTaskListFragment(addMode, taskId);
-                } else {
-                    Toast.makeText(getActivity(), "삭제할 Task가 없습니다.", Toast.LENGTH_LONG).show();
+                if (taskId == null) {
+                    Toast.makeText(getActivity(), getString(R.string.err_no_task_to_delete), Toast.LENGTH_LONG).show();
+                    keypadUtils.hideKeypad(fab);
                 }
-
+                else
+                    viewModel.deleteTask(taskId);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -185,125 +175,178 @@ public class AddEditTaskFragment extends DaggerFragment
         Timber.d("[ onViewCreated ]");
 
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(AddEditTaskViewModel.class);
-        observeTask();
 
         setupDrawerAndToolbar();
         setupSwitchLayout();
-
         navController = NavHostFragment.findNavController(this);
-        navController.addOnDestinationChangedListener(onDestinationChangedListener);
+        navController.addOnDestinationChangedListener(onDestinationChangedListener);    // setupFab()
         setupColorLabelArea();
         setupReminderArea();
         setupCompleteArea();
 
-
         // Check Bundle
         if (getArguments() != null) {
-            addMode = getArguments().getBoolean(NEWLY_ADD);
             taskId = getArguments().getString(TASK_ID);
-
-            Timber.d("[ Check Args. Values ]\nMode -> %s\ntaskId -> %s", addMode, taskId);
+            if (taskId == null)
+                keypadUtils.showKeypad();
+            Timber.d("[ Check Args. Values ]\ntaskId -> %s", taskId);
         }
 
-        // Task 정보 관련 뷰 초기화
+        // add observers
+        observeTitle();
+        observeDescription();
+        observeCompleted();
+        observeColor();
+        observeDueDate();
+        observeSaved();
+
+        viewModel.getLoading().observe(this, loading -> {
+            Timber.d(" #### Check loading. : %s  ####", loading);
+        });
+
+        viewModel.load(taskId);
+    }
+
+    private void setupDrawerAndToolbar() {
+        toolbarController.setAppbarExpanded(true);
+        toolbarController.setTitle("");
+        toolbarController.setToolbarColor(Task.DEFAULT_COLOR);
+        toolbarController.setupTitleLayout(View.VISIBLE, null, null);
+
+        // nav icon disable 작업.
+        toolbarController.setDrawerIndicatorEnabled(false);
+        toolbarController.addToolbarOnClickListener(v -> {
+            navController.navigateUp();
+        });
+        toolbarController.addDrawerListener();
+
         if (getActivity() != null) {
             titleEditText = getActivity().findViewById(R.id.add_item_edit_text_title);
             descriptionEditText = getActivity().findViewById(R.id.add_item_edit_text_description);
         }
+    }
 
-        if (addMode) {
-            // Task 새로 추가
-            keypadUtils.showKeypad();
-            keepDueDate = null;
-        } else {
-            // 기존 Task 정보 불러오기
-            Timber.d("DB에서 Task 불러오기 : %s", taskId);
-            viewModel.loadTaskByUuid(taskId);
+    private void setupSwitchLayout() {
+        if (getActivity() != null) {
+            // Switch Layout
+            switchLayout[0] = getActivity().findViewById(R.id.add_item_color_switch_layout_linear);
+            switchLayout[1] = getActivity().findViewById(R.id.add_item_reminder_switch_layout_linear);
+            switchLayout[2] = getActivity().findViewById(R.id.add_item_complete_switch_layout_linear);
+            for (int i = 0; i < switchLayout.length; i++)
+                switchLayout[i].setOnClickListener(this);
         }
+    }
 
+    private void setupFab(@NonNull int viewId) {
+        if (getActivity() == null)
+            return;
+
+        fab = getActivity().findViewById(viewId);
+        fab.setOnClickListener(this);
+
+        AnchoringFab anchoringFab = new AnchoringFab(fab.getLayoutParams(), fab);
+        anchoringFab.addAnchor(R.id.appbar, contextCompatUtils.getDrawable(R.drawable.ic_menu_send));
+    }
+
+    /** Adding Observers */
+    private void observeSaved() {
+        viewModel.getSaved().observe(this, state -> {
+            if (state.equals(AddEditTaskFragment.SAVED_OK)) {
+                Timber.d("Success to save a Task to DB");
+                // navigate to task list fragment
+                Bundle bundle = new Bundle();
+                Timber.d("전송하는 NEW_TASK_ID 값 : %s", taskId);
+                bundle.putString(TaskListFragment.NEW_TASK_ID, taskId);
+                navController.navigate(R.id.action_addEditTaskFragment_to_task_list, bundle);
+            }
+
+            if (state.equals(SAVED_FAIL)) {
+                Timber.d("Error occurred while saving a task to DB");
+                navController.navigateUp();
+            }
+        });
+    }
+
+    private void observeTitle() {
+        viewModel.getTitle().observe(this, title -> {
+            if (title == null) {
+                Timber.d("title 읽기 실패.");
+                return;
+            }
+            titleEditText.setText(title);
+        });
+    }
+
+    private void observeDescription() {
+        viewModel.getDescription().observe(this, desc -> {
+           if (desc == null) {
+               return;
+           }
+           descriptionEditText.setText(desc);
+        });
+    }
+
+    private void observeCompleted() {
+        viewModel.getCompleted().observe(this, isCompleted -> {
+            if (isCompleted == null)
+                return;
+           switchOfCompleteButton.setChecked(isCompleted);
+        });
+    }
+
+    private void observeColor() {
+        viewModel.getColor().observe(this, color -> {
+            if (color == null)  // error
+                return;
+
+            if (color == Task.DEFAULT_COLOR) {
+                switchOfColorLabelButton.setChecked(false);
+                toolbarController.setToolbarColor(Task.DEFAULT_COLOR);
+                // switch uncheck
+                if (radioGroup.getCheckedRadioButtonId() != -1 && getActivity() != null) {
+                    RadioButton rb = getActivity().findViewById(radioGroup.getCheckedRadioButtonId());
+                    rb.setChecked(false);
+                }
+            } else {
+                switchOfColorLabelButton.setChecked(true);
+                toolbarController.setToolbarColor(color);
+                radioGroup.check(contextCompatUtils.convertButtonColorToButtonId(color));
+                setLayoutVisibleWithAnimations(radioGroup,700, 500, true);
+            }
+        });
+    }
+
+    private void observeDueDate() {
+        viewModel.getDueDate().observe(this, dueDate -> {
+            if (dueDate == null) {
+                keepDueDate = null;
+            }
+            else  {
+                keepDueDate = dueDate;
+                switchOfReminderButton.setChecked(true);
+            }
+        });
     }
 
     private boolean isTitleEmpty(EditText titleEditText) {
         return (titleEditText.length() <= 0);
     }
 
-    /** Make Object things to save */
-    private Task wrapupUserInputToObject(Task inputTask) {
-        // title, desc, completed , id
-        inputTask.setTitle(titleEditText.getText().toString());
-        inputTask.setDescription(descriptionEditText.getText().toString());
-        inputTask.setCompleted(switchOfCompleteButton.isChecked());
-        int colorLabelCheckedId = radioGroup.getCheckedRadioButtonId();
-        int color = colorLabelCheckedId == -1 ? TOOLBAR_DEFAULT_COLOR : contextCompatUtils.convertButtonBackgroundColorToColorId(colorLabelCheckedId);
-        inputTask.setColorLabel(color);
-
-        // DueDate part later
-        inputTask.setWrittenDate(new Date());
-        inputTask.setDueDate(keepDueDate);
-
-        return inputTask;
-    }
-
-    private Task makeTaskObject(boolean addMode) {
-        if (addMode)
-            return wrapupUserInputToObject(new Task(UUID.randomUUID().toString()));
-
-        return wrapupUserInputToObject(cachedTask);
-    }
-
-    private String saveTaskInDatabase(boolean addMode) {
-        if (isTitleEmpty(titleEditText)) {
-            titleEditText.setError(getResources().getString(R.string.title_error));
-            return ERR_TITLE_EMPTY;
-        }
-
-        Task resultTask = makeTaskObject(addMode);
-        // Check the object is created correctly before put it to the Database.
-        String dueDateCheck = resultTask.getDueDate() == null ? "null" : resultTask.getDueDate().toString();
-        Timber.d("[만들어진 Task Obj값 확인]\nid : %s\ntitle : %s\ndesc : %s\ncomp : %s\nwrittenDate : %s\ndueDate : %s",
-                resultTask.getUuid(), resultTask.getTitle(), resultTask.getDescription(),
-                resultTask.isCompleted(), resultTask.getWrittenDate().toString(), dueDateCheck);
-
-        if (addMode) {
-            Timber.d("[ 새로운 Task를 DB에 삽입. ]");
-            viewModel.insertTask(resultTask);
-        }
-        else {
-            viewModel.updateTask(resultTask);
-        }
-
-        return resultTask.getUuid();
-    }
-
-
-    /** Methods to set dueDate values */
     private Date setCurrentDueDate() {
-        Timber.d("KeepDueDate == null : 지금 시간 기준으로 디폴트값 세팅");
         dueDatePickEditText.setText(getResources().getString(R.string.today));
 
         DateManipulator dm = new DateManipulator(null, MainActivity.DEVICE_LOCALE);
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.DATE, dm.getDate());
-
+        Calendar cal = dm.setTodayPlus1Hour(getActivity());
         String formatHourOfDay = dm.get24HourFormatString(getActivity());
-        if (DateFormat.is24HourFormat(getActivity())) {
-            cal.set(Calendar.HOUR_OF_DAY, cal.get(Calendar.HOUR_OF_DAY) + 1);
-        } else {
-            cal.set(Calendar.HOUR, cal.get(Calendar.HOUR) + 1);
-        }
-
-        dm.setCalendar(cal);
         dueTimePickEditText.setText(dm.getDateString(cal.getTime(), formatHourOfDay));
         return cal.getTime();
     }
 
-
     private Date setExistingDateValue(Date date) {
-        if (date == null) {
+        if (date == null)
             return setCurrentDueDate();
-        }
-        DateManipulator dm = new DateManipulator(date, MainActivity.DEVICE_LOCALE);
 
+        DateManipulator dm = new DateManipulator(date, MainActivity.DEVICE_LOCALE);
         String dueDateString = dm.getDateString(date, DateManipulator.DATE_FORMAT_DATE_PICKER);
         String dueTimeString = dm.getDateString(date, dm.get24HourFormatString(getActivity()));
         dueDatePickEditText.setText(dueDateString);
@@ -312,59 +355,64 @@ public class AddEditTaskFragment extends DaggerFragment
         return date;
     }
 
-    /** This method will be called by Callback of Observer.
-     * to restore Task Object Data to its View. */
-    private void restoreTaskDataToView(Task task) {
-        // 기존 데이터를 AddEditTaskFragment에 입력하는 과정.
-        Timber.d("기존 Task를 Restore 하기");
-        titleEditText.setText(task.getTitle());
-        descriptionEditText.setText(task.getDescription());
-        switchOfCompleteButton.setChecked(task.isCompleted());
+    private void setupColorLabelArea() {
+        if (getActivity() != null) {
+            // Color Label Things
+            radioGroup = getActivity().findViewById(R.id.add_item_radio_group);
+            radioGroup.getLayoutTransition()
+                    .enableTransitionType(LayoutTransition.CHANGE_APPEARING);
+            switchOfColorLabelButton = getActivity().findViewById(R.id.add_item_switch_color_label);
+            switchOfColorLabelButton.setOnCheckedChangeListener(this);
 
-        int color = task.getColorLabel();
-        if (color == Task.DEFAULT_COLOR) {
-            setLayoutVisibleWithAnimations(radioGroup,700, 500, false);
-        } else {
-            setLayoutVisibleWithAnimations(radioGroup,700, 500, true);
-            switchOfColorLabelButton.setChecked(true);
-            radioGroup.check(contextCompatUtils.convertButtonColorToButtonId(color));
-            toolbarController.setToolbarColor(color);
-        }
-
-        // 기존에 DueDate값이 있다면
-        if (task.getDueDate() == null) {
-            setLayoutVisibleWithAnimations(reminderLayout, 500, 500, false);
-        } else {
-            // 레이아웃을 VISIBLE 하게 변경하고 데이터를 입력한다.
-            setLayoutVisibleWithAnimations(reminderLayout, 500, 500, true);
-            switchOfReminderButton.setChecked(true);
-            keepDueDate = task.getDueDate();
+            radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
+                    // color 선택되었을 때
+                    final int color = contextCompatUtils.convertButtonBackgroundColorToColorId(checkedId);
+                    viewModel.setColor(color);
+                }
+            });
         }
     }
 
-    private void observeTask() {
-        viewModel.getTask().observe(this, task -> {
-            // set Task data values to the appropriate each views.
-            if (task != null) {
-                Timber.d("[Check the Single Task value ] - %s, %s", task.getUuid(), task.getTitle());
-                cachedTask = task;
-                restoreTaskDataToView(task);
-            } else {
-                Timber.d("Observer에서 Task 읽기 실패.");
-            }
-        });
+    private void setupReminderArea() {
+        if (getActivity() != null) {
+            reminderLayout = getActivity().findViewById(R.id.add_item_reminder_layout_linear);
+            switchOfReminderButton = getActivity().findViewById(R.id.add_item_switch_reminder);
+            switchOfReminderButton.setOnCheckedChangeListener(this);
+
+            dueDatePickEditText = getActivity().findViewById(R.id.add_item_due_date_reminder);
+            dueTimePickEditText = getActivity().findViewById(R.id.add_item_due_time_reminder);
+            dueDatePickEditText.setOnClickListener(this);
+            dueTimePickEditText.setOnClickListener(this);
+        }
     }
 
-    private NavController.OnDestinationChangedListener onDestinationChangedListener = new NavController.OnDestinationChangedListener() {
-        @Override
-        public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
-            Timber.d("\n   Destination : %s" , destination.getLabel() + ",   arguments : " + arguments);
-            if (destination.getLabel().equals("fragment_add_edit_task")) {
-                Timber.d("ADD_EDIT_TASK_FRAGMENT in ADD_EDIT_FRAGMENT");
-                setupFab(R.id.fab);
-            }
+    private void setupCompleteArea() {
+        if (getActivity() == null)
+            return;
+        switchOfCompleteButton = getActivity().findViewById(R.id.add_item_switch_complete);
+        switchOfCompleteButton.setOnCheckedChangeListener(this);
+    }
+
+
+    /** Animation Handling for making layout visible */
+    private void setLayoutVisibleWithAnimations(View view, long showUpDuration, long disappearDuration, boolean isChecked) {
+        float showUpAlpha = 1.0f;
+        float disappearAlpha = 0.0f;
+        LayoutAnim layoutAnim = new LayoutAnim(view, isChecked);
+
+        if (isChecked) {
+            view.animate().alpha(showUpAlpha)
+                    .setDuration(showUpDuration)
+                    .setListener(layoutAnim);
+        } else {
+            view.animate().alpha(disappearAlpha)
+                    .setDuration(disappearDuration)
+                    .setListener(layoutAnim);
         }
-    };
+
+    }
 
     /** Listener for View.onClick*/
     @Override
@@ -373,16 +421,12 @@ public class AddEditTaskFragment extends DaggerFragment
 
         switch (v.getId()) {
             case R.id.add_item_color_switch_layout_linear:
-                keypadUtils.hideKeypad(switchOfCompleteButton);
                 switchOfColorLabelButton.performClick();
                 break;
             case R.id.add_item_reminder_switch_layout_linear:
-                keypadUtils.hideKeypad(switchOfReminderButton);
                 switchOfReminderButton.performClick();
-
                 break;
             case R.id.add_item_complete_switch_layout_linear:
-                keypadUtils.hideKeypad(switchOfCompleteButton);
                 switchOfCompleteButton.performClick();
                 break;
 
@@ -403,6 +447,19 @@ public class AddEditTaskFragment extends DaggerFragment
                 TimePickerDialog timePickerDialog = new TimePickerDialog(getActivity(), this, hour, minute, DateFormat.is24HourFormat(getActivity()));
                 timePickerDialog.show();
                 break;
+            case R.id.fab:
+                Timber.d("[ Fab.onClick in AddEditTaskFragment ]");
+                keypadUtils.hideKeypad(fab);
+                if (isTitleEmpty(titleEditText)) {
+                    titleEditText.setError(getResources().getString(R.string.title_error));
+                    return;
+                }
+                /* Title, Description, DueDate는 OnChangedListener로 변화마다 ViewModel에 Post하는 것이 아니기 때문에 저장하기 전에 최종적으로 post 해준다. */
+                viewModel.setTitle(titleEditText.getText().toString());
+                viewModel.setDescription(descriptionEditText.getText().toString());
+                viewModel.setDueDate(keepDueDate);
+                viewModel.saveTask();
+                break;
         }
     }
 
@@ -410,158 +467,41 @@ public class AddEditTaskFragment extends DaggerFragment
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         int viewId = buttonView.getId();
+        keypadUtils.hideKeypad(fab);
         switch (viewId) {
             case R.id.add_item_switch_color_label:
-                keypadUtils.hideKeypad(switchOfCompleteButton);
+                if (!isChecked)
+                    viewModel.setColor(Task.DEFAULT_COLOR);
                 setLayoutVisibleWithAnimations(radioGroup,700, 500, isChecked);
-
-                if (!isChecked) {
-                    if (radioGroup.getCheckedRadioButtonId() != -1) {
-                        RadioButton rb = getActivity().findViewById(radioGroup.getCheckedRadioButtonId());
-                        rb.setChecked(false);
-                    }
-                    toolbarController.setToolbarColor(TOOLBAR_DEFAULT_COLOR);
-                }
                 break;
 
             case R.id.add_item_switch_reminder:
-                keypadUtils.hideKeypad(switchOfReminderButton);
-                setLayoutVisibleWithAnimations(reminderLayout,500,500,isChecked);
-                keepDueDate = setExistingDateValue(keepDueDate);
+                if (!isChecked)
+                    keepDueDate = null;
+                else
+                    keepDueDate = setExistingDateValue(keepDueDate);
+
+                viewModel.setDueDate(keepDueDate);
+                setLayoutVisibleWithAnimations(reminderLayout,500, 500, isChecked);
                 break;
 
             case R.id.add_item_switch_complete:
-                keypadUtils.hideKeypad(switchOfCompleteButton);
+                viewModel.setCompleted(isChecked);
+                break;
         }
 
     }
 
-    private void setLayoutVisibleWithAnimations(View view, long showUpDuration, long disappearDuration, boolean isChecked) {
-        float showUpAlpha = 1.0f;
-        float disappearAlpha = 0.0f;
-        LayoutAnim layoutAnim = new LayoutAnim(view, isChecked);
-
-        if (isChecked) {
-            view.animate().alpha(showUpAlpha)
-                    .setDuration(showUpDuration)
-                    .setListener(layoutAnim);
-        } else {
-            view.animate().alpha(disappearAlpha)
-                    .setDuration(disappearDuration)
-                    .setListener(layoutAnim);
-        }
-
-    }
-
-    private void setupFab(@NonNull int viewId) {
-        if (getActivity() == null)
-            return;
-
-        fab = getActivity().findViewById(viewId);
-
-        fab.setOnClickListener(v -> {
-            Timber.d("[ Fab.onClick in AddEditTaskFragment ]");
-            keypadUtils.hideKeypad(fab);
-            String resultTaskId = saveTaskInDatabase(addMode);
-
-            if (!resultTaskId.equals(ERR_TITLE_EMPTY)) {
-                // saveTaskInDatabase 에서 addMode true / false 다 처리하므로
-                // bundle에 추가할 값은 동일하다.
-                navigateToTaskListFragment(addMode, resultTaskId);
-            }
-        });
-
-        AnchoringFab anchoringFab = new AnchoringFab(fab.getLayoutParams(), fab);
-        anchoringFab.addAnchor(R.id.appbar, contextCompatUtils.getDrawable(R.drawable.ic_menu_send));
-    }
-
-    private void navigateToTaskListFragment(boolean addMode, String taskId) {
-        Bundle bundle = new Bundle();
-        bundle.putBoolean("ADD_MODE", addMode);
-        Timber.d("전송하는 NEW_TASK_ID 값 : %s", taskId);
-        bundle.putString(TaskListFragment.NEW_TASK_ID, taskId);
-        NavHostFragment.findNavController(this).navigate(R.id.action_addEditTaskFragment_to_task_list, bundle);
-    }
-
-    private void setupDrawerAndToolbar() {
-        toolbarController.setAppbarExpanded(true);
-        toolbarController.setTitle("");
-        TOOLBAR_DEFAULT_COLOR = contextCompatUtils.getColor(R.color.addItemToolbar);
-        toolbarController.setToolbarColor(TOOLBAR_DEFAULT_COLOR);
-        toolbarController.setupTitleLayout(View.VISIBLE, null, null);
-
-        toolbarController.setDrawerIndicatorEnabled(false);
-        toolbarController.addToolbarOnClickListener(v -> {
-            navController.navigateUp();
-        });
-        toolbarController.addDrawerListener(toggle);
-    }
-
-    private void setupColorLabelArea() {
-        if (getActivity() != null) {
-            // Color Label Things
-            radioGroup = getActivity().findViewById(R.id.add_item_radio_group);
-            radioGroup.getLayoutTransition()
-                    .enableTransitionType(LayoutTransition.CHANGE_APPEARING);
-            switchOfColorLabelButton = getActivity().findViewById(R.id.add_item_switch_color_label);
-            switchOfColorLabelButton.setOnCheckedChangeListener(this);
-            radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
-                    final int color = contextCompatUtils.convertButtonBackgroundColorToColorId(checkedId);
-                    toolbarController.setToolbarColor(color);
-                }
-            });
-
-            // EDIT 모드인 경우 Task의 colorLabel 값에 맞게 설정값 변경.
-        }
-    }
-
-    private void setupReminderArea() {
-        if (getActivity() != null) {
-            // Reminder Things
-            reminderLayout = getActivity().findViewById(R.id.add_item_reminder_layout_linear);
-
-            switchOfReminderButton = getActivity().findViewById(R.id.add_item_switch_reminder);
-            switchOfReminderButton.setOnCheckedChangeListener(this);
-
-            dueDatePickEditText = getActivity().findViewById(R.id.add_item_due_date_reminder);
-            dueTimePickEditText = getActivity().findViewById(R.id.add_item_due_time_reminder);
-            dueDatePickEditText.setOnClickListener(this);
-            dueTimePickEditText.setOnClickListener(this);
-        }
-    }
-
-    private void setupCompleteArea() {
-        if (getActivity() == null)
-            return;
-        // Switch Button to complete a task.
-        switchOfCompleteButton = getActivity().findViewById(R.id.add_item_switch_complete);
-        switchOfCompleteButton.setOnCheckedChangeListener(this);
-    }
-
-    private void setupSwitchLayout() {
-        if (getActivity() != null) {
-            // Switch Layout
-            switchLayout[0] = getActivity().findViewById(R.id.add_item_color_switch_layout_linear);
-            switchLayout[1] = getActivity().findViewById(R.id.add_item_reminder_switch_layout_linear);
-            switchLayout[2] = getActivity().findViewById(R.id.add_item_complete_switch_layout_linear);
-            for (int i = 0; i < switchLayout.length; i++)
-                switchLayout[i].setOnClickListener(this);
-        }
-    }
-
-
+    /** Date & Time Picker */
     @Override
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
         DateManipulator dm = new DateManipulator(keepDueDate, MainActivity.DEVICE_LOCALE);
 
-        Calendar calendarNow = Calendar.getInstance();
-        Calendar reminderCalendar = Calendar.getInstance();
+        Calendar reminderCalendar = dm.getCalendar();
         reminderCalendar.set(year, month, dayOfMonth);
 
-        if (dm.compareCalendar(calendarNow, reminderCalendar) < 0) {
-            Toast.makeText(getActivity(), getString(R.string.before_today), Toast.LENGTH_LONG).show();
+        if (dm.compareCalendar(Calendar.getInstance(), reminderCalendar) < 0) {
+            Toast.makeText(getActivity(), getString(R.string.err_before_today), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -572,18 +512,28 @@ public class AddEditTaskFragment extends DaggerFragment
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         DateManipulator dm = new DateManipulator(keepDueDate, MainActivity.DEVICE_LOCALE);
-        Calendar calendarNow = Calendar.getInstance();
-        Calendar reminderCalendar = Calendar.getInstance();
 
+        Calendar reminderCalendar = dm.getCalendar();
         reminderCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
         reminderCalendar.set(Calendar.MINUTE, minute);
 
-        if (reminderCalendar.before(calendarNow)) {
-            Toast.makeText(getActivity(), getString(R.string.before_today), Toast.LENGTH_LONG).show();
+        if (dm.compareCalendar(Calendar.getInstance(), reminderCalendar) < 0) {
+            Toast.makeText(getActivity(), getString(R.string.err_before_today), Toast.LENGTH_LONG).show();
             return;
         }
 
         keepDueDate = dm.setTime(reminderCalendar, keepDueDate, hourOfDay, minute);
         dueTimePickEditText.setText(dm.getDateString(keepDueDate, dm.get24HourFormatString(getActivity())));
     }
+
+    private NavController.OnDestinationChangedListener onDestinationChangedListener = new NavController.OnDestinationChangedListener() {
+        @Override
+        public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
+            Timber.d("\n   Destination : %s" , destination.getLabel() + ",   arguments : " + arguments);
+            if (destination.getLabel().equals("fragment_add_edit_task")) {
+                Timber.d("ADD_EDIT_TASK_FRAGMENT in ADD_EDIT_FRAGMENT");
+                setupFab(R.id.fab);
+            }
+        }
+    };
 }

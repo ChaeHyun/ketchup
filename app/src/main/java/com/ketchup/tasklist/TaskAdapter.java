@@ -102,7 +102,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             // For Testing : On-Click Method
             itemView.setOnClickListener((v) -> {
                 Bundle bundle = new Bundle();
-                bundle.putBoolean(AddEditTaskFragment.NEWLY_ADD, false);
                 bundle.putString(AddEditTaskFragment.TASK_ID, taskId);
 
                 navController.navigate(R.id.action_task_list_to_addEditTaskFragment, bundle);

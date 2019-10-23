@@ -121,6 +121,19 @@ public class DateManipulator {
         return day;
     }
 
+    public Calendar setTodayPlus1Hour(Context context) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DATE, getDate());
+
+        if (DateFormat.is24HourFormat(context)) {
+            cal.set(Calendar.HOUR_OF_DAY, cal.get(Calendar.HOUR_OF_DAY) + 1);
+        } else {
+            cal.set(Calendar.HOUR, cal.get(Calendar.HOUR) + 1);
+        }
+        setCalendar(cal);
+        return cal;
+    }
+
     public boolean isToday(Calendar now, Calendar target) {
         return ( (now.get(Calendar.YEAR) == target.get(Calendar.YEAR))
                 && (now.get(Calendar.MONTH) == target.get(Calendar.MONTH))
@@ -128,8 +141,11 @@ public class DateManipulator {
     }
 
     public int compareCalendar(Calendar now, Calendar target) {
-        if (isToday(now, target))
+        if (isToday(now, target)) {
+            if (target.before(now))
+                return IT_IS_PAST;
             return IT_IS_TODAY; //0
+        }
         else if (target.before(now))
             return IT_IS_PAST;  // -1
         else    // target.after(now)
