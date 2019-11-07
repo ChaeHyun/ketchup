@@ -2,6 +2,8 @@ package com.ketchup.utils;
 
 import android.app.Activity;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -32,6 +34,9 @@ public class ToolbarController {
     private TextInputLayout titleLayout;
     private EditText titleEditText;
 
+    private Window window;
+
+
     @Inject
     public ToolbarController(Activity activity) {
         drawer = activity.findViewById(R.id.drawer_layout);
@@ -42,6 +47,8 @@ public class ToolbarController {
         titleEditText = activity.findViewById(R.id.add_item_edit_text_title);
 
         toggle = new ActionBarDrawerToggle(activity, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+
+        window = activity.getWindow();
     }
 
     /** About toggle */
@@ -84,9 +91,17 @@ public class ToolbarController {
         return toolbar;
     }
 
-    public void setToolbarColor(int color) {
+    public void setToolbarColor(int color, int darkColor) {
         ctl.setBackgroundColor(color);
         toolbar.setBackgroundColor(color);
+
+        setStatusBarColor(darkColor);
+    }
+
+    private void setStatusBarColor(int color) {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(color);
     }
 
     public void setTitle(String title) {

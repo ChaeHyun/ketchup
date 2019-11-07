@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#D81B60</color>
+<!--    <color name="colorPrimary">#008577</color>-->
+<!--    <color name="colorPrimaryDark">#00574B</color>-->
+<!--    <color name="colorAccent">#D81B60</color>-->
+    <color name="colorPrimary">#C62828</color>
+    <color name="colorPrimaryDark">#AA1F1F</color>
+    <color name="colorAccent">#568F2E</color>
+
+    <color name="navSelectedBackground">#B3D7D8D8</color>
 
     <color name="greyBlue">#90a4ae</color>
     <color name="purple">#673ab7</color>
@@ -31,4 +36,12 @@
     <color name="labelYellow">#FBC02D</color>
     <color name="labelPurple">#7B1FA2</color>
     <color name="labelGreen">#2E7D32</color>
+
+    <!-- DarkColorLabels for Status bar-->
+    <color name="defaultGrayDark">#9E9A99</color>
+    <color name="labelBlueDark">#095EB1</color>
+    <color name="labelRedDark">#AD1B1B</color>
+    <color name="labelYellowDark">#D6A019</color>
+    <color name="labelPurpleDark">#5F1180</color>
+    <color name="labelGreenDark">#1D6420</color>
 </resources>

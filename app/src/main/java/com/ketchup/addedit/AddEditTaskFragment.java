@@ -128,6 +128,9 @@ public class AddEditTaskFragment extends DaggerFragment
         toolbarController.setupTitleLayout(View.GONE, null, null);
         toolbarController.setDrawerIndicatorEnabled(true);
         toolbarController.removeDrawerListener();
+
+        int toolbarColor = contextCompatUtils.getColor(R.color.colorPrimary);
+        toolbarController.setToolbarColor(toolbarColor, contextCompatUtils.getDarkColor(toolbarColor));
     }
 
     @Override
@@ -210,7 +213,8 @@ public class AddEditTaskFragment extends DaggerFragment
     private void setupDrawerAndToolbar() {
         toolbarController.setAppbarExpanded(true);
         toolbarController.setTitle("");
-        toolbarController.setToolbarColor(Task.DEFAULT_COLOR);
+        int toolbarColor = contextCompatUtils.getColor(R.color.defaultGray);
+        toolbarController.setToolbarColor(toolbarColor, contextCompatUtils.getDarkColor(toolbarColor));
         toolbarController.setupTitleLayout(View.VISIBLE, null, null);
 
         // nav icon disable 작업.
@@ -301,15 +305,10 @@ public class AddEditTaskFragment extends DaggerFragment
 
             if (color == Task.DEFAULT_COLOR) {
                 switchOfColorLabelButton.setChecked(false);
-                toolbarController.setToolbarColor(Task.DEFAULT_COLOR);
-                // switch uncheck
-                if (radioGroup.getCheckedRadioButtonId() != -1 && getActivity() != null) {
-                    RadioButton rb = getActivity().findViewById(radioGroup.getCheckedRadioButtonId());
-                    rb.setChecked(false);
-                }
+                toolbarController.setToolbarColor(color, contextCompatUtils.getDarkColor(color));
             } else {
                 switchOfColorLabelButton.setChecked(true);
-                toolbarController.setToolbarColor(color);
+                toolbarController.setToolbarColor(color, contextCompatUtils.getDarkColor(color));
                 radioGroup.check(contextCompatUtils.convertButtonColorToButtonId(color));
                 setLayoutVisibleWithAnimations(radioGroup,700, 500, true);
             }
@@ -367,7 +366,11 @@ public class AddEditTaskFragment extends DaggerFragment
             radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
-                    // color 선택되었을 때
+                    if (checkedId == -1) {
+                        viewModel.setColor(Task.DEFAULT_COLOR);
+                        return;
+                    }
+
                     final int color = contextCompatUtils.convertButtonBackgroundColorToColorId(checkedId);
                     viewModel.setColor(color);
                 }
@@ -398,6 +401,7 @@ public class AddEditTaskFragment extends DaggerFragment
 
     /** Animation Handling for making layout visible */
     private void setLayoutVisibleWithAnimations(View view, long showUpDuration, long disappearDuration, boolean isChecked) {
+        Timber.d("set layout Visible : %s", isChecked);
         float showUpAlpha = 1.0f;
         float disappearAlpha = 0.0f;
         LayoutAnim layoutAnim = new LayoutAnim(view, isChecked);
@@ -470,9 +474,12 @@ public class AddEditTaskFragment extends DaggerFragment
         keypadUtils.hideKeypad(fab);
         switch (viewId) {
             case R.id.add_item_switch_color_label:
-                if (!isChecked)
-                    viewModel.setColor(Task.DEFAULT_COLOR);
+                if (!isChecked) {
+                    /* clearCheck() 시에도 RadioGroup.OnCheckedChangeListener()가 응답한다. */
+                    radioGroup.clearCheck();
+                }
                 setLayoutVisibleWithAnimations(radioGroup,700, 500, isChecked);
+
                 break;
 
             case R.id.add_item_switch_reminder:

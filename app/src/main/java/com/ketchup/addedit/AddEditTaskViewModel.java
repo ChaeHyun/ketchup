@@ -15,7 +15,7 @@ import javax.inject.Inject;
 
 import timber.log.Timber;
 
-/** before refactoring 65 lines. */
+
 public class AddEditTaskViewModel extends ViewModel {
 
     private TaskRepository taskRepository;

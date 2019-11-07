@@ -145,7 +145,6 @@ public class TaskListFragment extends DaggerFragment {
     private void setupToolbar() {
         if (getActivity() != null) {
             toolbarController.setTitle("TaskListScreen");
-            toolbarController.setToolbarColor(contextCompatUtils.getColor(R.color.green));
         }
     }
 

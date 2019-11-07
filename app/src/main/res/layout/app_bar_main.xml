@@ -24,8 +24,6 @@
             android:id="@+id/activity_main_collapsing_toolbar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/yellow"
-            app:contentScrim="?attr/colorPrimary"
             app:expandedTitleTextAppearance="@style/TextAppearanceSize.Large"
             app:expandedTitleMarginEnd="64dp"
             app:expandedTitleMarginStart="48dp"
@@ -35,7 +33,6 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@color/yellow"
                 android:elevation="0dp"
                 app:layout_collapseMode="pin"
                 app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
@@ -49,7 +46,6 @@
                 android:layout_marginEnd="40dp"
                 android:layout_marginTop="70dp"
                 android:layout_marginBottom="?attr/actionBarSize"
-                android:textColorHint="@color/colorPrimary"
                 app:hintTextAppearance="@style/EditTextHintAppearance">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -57,7 +53,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
+                    app:theme="@style/ThemeOverlay.AppCompat.EditTextTheme"
                     android:inputType="textCapSentences"
+                    android:textColor="@color/blackTextColor"
                     android:hint="@string/title" />
 
             </com.google.android.material.textfield.TextInputLayout>

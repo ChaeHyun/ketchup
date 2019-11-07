@@ -26,6 +26,25 @@ public class ContextCompatUtils {
         return ContextCompat.getColor(context, resId);
     }
 
+    public int getDarkColor(int color) {
+        int darkColor = ContextCompat.getColor(context, R.color.colorPrimaryDark);
+
+        if (color == ContextCompat.getColor(context, R.color.defaultGray))
+            darkColor = ContextCompat.getColor(context, R.color.defaultGrayDark);
+        if (color == ContextCompat.getColor(context, R.color.labelRed))
+            darkColor = ContextCompat.getColor(context, R.color.labelRedDark);
+        if (color == ContextCompat.getColor(context, R.color.labelBlue))
+            darkColor = ContextCompat.getColor(context, R.color.labelBlueDark);
+        if (color == ContextCompat.getColor(context, R.color.labelGreen))
+            darkColor = ContextCompat.getColor(context, R.color.labelGreenDark);
+        if (color == ContextCompat.getColor(context, R.color.labelYellow))
+            darkColor = ContextCompat.getColor(context, R.color.labelYellowDark);
+        if (color == ContextCompat.getColor(context, R.color.labelPurple))
+            darkColor = ContextCompat.getColor(context, R.color.labelPurpleDark);
+
+        return darkColor;
+    }
+
     public int convertButtonBackgroundColorToColorId(int colorLabelId) {
         // Default Color
         int color = ContextCompat.getColor(context, R.color.addItemToolbar);
