@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
+import com.ketchup.utils.AlarmUtils;
 
 import java.util.Date;
 import java.util.UUID;
@@ -48,6 +49,8 @@ public class AddEditTaskViewModel extends ViewModel {
     private boolean isDataLoaded = false;
     private String taskId = null;
 
+    @Inject
+    AlarmUtils alarmUtils;
 
     @Inject
     public AddEditTaskViewModel(TaskRepository taskRepository) {
@@ -173,6 +176,13 @@ public class AddEditTaskViewModel extends ViewModel {
             insertTask(saveTask);
         else
             updateTask(saveTask);
+
+        if (dueDate != null && !completed) {
+            Timber.d("알람등록하기.");
+            alarmUtils.registerAlarm(saveTask);
+        } else {
+            Timber.d("DueDate is NULL. || This task is completed");
+        }
 
         _saved.postValue(AddEditTaskFragment.SAVED_OK);
     }
