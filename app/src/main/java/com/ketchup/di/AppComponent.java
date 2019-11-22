@@ -18,7 +18,7 @@ import dagger.android.AndroidInjector;
 import dagger.android.support.AndroidSupportInjectionModule;
 
 @Singleton
-@Component(modules = {AppModule.class, RoomModule.class,
+@Component(modules = {AppModule.class, RoomModule.class, BroadcastReceiverModule.class,
         AndroidSupportInjectionModule.class,
         ActivityBinder.class})
 public interface AppComponent extends AndroidInjector<KetchupApplication> {
@@ -35,4 +35,5 @@ public interface AppComponent extends AndroidInjector<KetchupApplication> {
     AppDatabase appDatabase();
     TaskDao taskDao();
     TaskRepository taskRepository();
+
 }
