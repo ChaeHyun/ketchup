@@ -6,6 +6,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -40,10 +41,25 @@
     </style>
 
     <style name="EditTextHintAppearance" parent="TextAppearance.AppCompat">
-        <item name="android:textColor">?attr/colorAccent</item>
+        <item name="android:textColor">@color/blackTextColor</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textSize">13sp</item>
-        <item name="android:colorActivatedHighlight">@color/green</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColorHint">@color/blackTextColor</item>
+    </style>
+
+    <style name="ThemeOverlay.AppCompat.EditTextTheme">
+        <item name="colorControlNormal">@color/blackTextColor</item>
+        <item name="colorControlActivated">@color/blackTextColor</item>
+        <item name="colorControlHighlight">@color/colorAccent</item>
+    </style>
+
+
+    <style name="ThemeOverlay.AppCompat.navTheme">
+        <!-- Color of text and icon when SELECTED -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <!-- Background color when SELECTED -->
+        <item name="colorControlHighlight">@color/navSelectedBackground</item>
+
     </style>
 
 </resources>
