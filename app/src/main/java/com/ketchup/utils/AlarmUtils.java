@@ -21,36 +21,37 @@ public class AlarmUtils {
         alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
     }
 
-    private Intent makeIntent(Task task) {
+    private Intent makeIntent(String taskId) {
         Intent intent = new Intent(context, RegisteredAlarmReceiver.class);
         intent.setAction(RegisteredAlarmReceiver.ACTION_REGISTER_ALARM);
-        intent.putExtra(RegisteredAlarmReceiver.TASK_ID, task.getUuid());
+        intent.putExtra(RegisteredAlarmReceiver.TASK_ID, taskId);
 
         return intent;
     }
 
-    private PendingIntent makePendingIntent(Task task) {
-        Intent intent = makeIntent(task);
+    private PendingIntent makePendingIntent(String taskId) {
+        Intent intent = makeIntent(taskId);
 
-        Timber.d("Check the Request Code : %d", task.getUuid().hashCode());
-        return PendingIntent.getBroadcast(context, task.getUuid().hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Timber.d("Check the Request Code : %d", taskId.hashCode());
+        return PendingIntent.getBroadcast(context, taskId.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     public void registerAlarm(Task task) {
-        PendingIntent pendingIntent = makePendingIntent(task);
+        PendingIntent pendingIntent = makePendingIntent(task.getUuid());
 
         long delay = (task.getDueDate() != null) ? task.getDueDate().getTime() : 0;
         Timber.d("알람을 등록합니다. 시간 : %d", delay);
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, delay, pendingIntent);
     }
 
-    public void cancelAlarm(Task task) {
-        PendingIntent pendingIntent = makePendingIntent(task);
+    public void cancelAlarm(String taskId) {
+        PendingIntent pendingIntent = makePendingIntent(taskId);
         alarmManager.cancel(pendingIntent);
+        Timber.d("알람 취소하기");
     }
 
-    public boolean doesPendingIntentExist(Task task) {
-        PendingIntent pi = makePendingIntent(task);
+    public boolean doesPendingIntentExist(String taskId) {
+        PendingIntent pi = makePendingIntent(taskId);
         return (pi != null);
     }
 

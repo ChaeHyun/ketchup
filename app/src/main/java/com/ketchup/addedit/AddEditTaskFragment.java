@@ -159,7 +159,7 @@ public class AddEditTaskFragment extends DaggerFragment
                     keypadUtils.hideKeypad(fab);
                 }
                 else
-                    viewModel.deleteTask(taskId);
+                    viewModel.deleteTask(taskId, keepDueDate);
                 break;
         }
         return super.onOptionsItemSelected(item);

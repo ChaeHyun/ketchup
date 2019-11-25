@@ -35,7 +35,7 @@ public class RoomModule {
 
         appDatabase = Room.databaseBuilder(context, AppDatabase.class, DB_NAME)
                 .fallbackToDestructiveMigration()
-                .addCallback(populateDummyData())
+                //.addCallback(populateDummyData())
                 .build();
 
         return appDatabase;

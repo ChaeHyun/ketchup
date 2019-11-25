@@ -207,14 +207,16 @@ public class AddEditTaskViewModel extends ViewModel {
         });
     }
 
-    public void deleteTask(final String uuid) {
+    public void deleteTask(final String uuid, final Date dueDate) {
         if (uuid == null) {
             _saved.postValue(AddEditTaskFragment.SAVED_FAIL);
             return;
         }
-        Executors.newSingleThreadExecutor().execute(() ->
-                taskRepository.deleteTask(UUID.fromString(uuid))
-        );
+        Executors.newSingleThreadExecutor().execute(() -> {
+            taskRepository.deleteTask(UUID.fromString(uuid));
+            if (dueDate != null) // plus  && dueDate == TODAY
+                alarmUtils.cancelAlarm(uuid);
+        });
         _saved.postValue(AddEditTaskFragment.SAVED_OK);
     }
 }
