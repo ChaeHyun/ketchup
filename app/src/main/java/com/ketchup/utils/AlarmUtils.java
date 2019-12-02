@@ -44,6 +44,15 @@ public class AlarmUtils {
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, delay, pendingIntent);
     }
 
+    /* Task.dueDate 값이 아니라 별도의 delay 값을 받아서 Alarm 등록하는 메소드 필요.
+    * void registerAlarmForSnooze(Task task, long delay) -> system.currentTime() + delay */
+    public void registerAlarmWithDelay(Task task, long delay) {
+        PendingIntent pendingIntent = makePendingIntent(task.getUuid());
+
+        Timber.d("알람을 등록합니다. 시간 param : %d", delay);
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, delay, pendingIntent);
+    }
+
     public void cancelAlarm(String taskId) {
         PendingIntent pendingIntent = makePendingIntent(taskId);
         alarmManager.cancel(pendingIntent);

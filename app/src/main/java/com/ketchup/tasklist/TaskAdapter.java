@@ -1,5 +1,6 @@
 package com.ketchup.tasklist;
 
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.ketchup.R;
 import com.ketchup.addedit.AddEditTaskFragment;
-import com.ketchup.model.ColorLabel;
 import com.ketchup.model.task.Task;
 import com.ketchup.utils.DateManipulator;
 
@@ -75,6 +75,18 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         } else {
             holder.dueDateTextView.setText(null);
             holder.dueDateTextView.setVisibility(View.GONE);
+
+        }
+
+        // Complete Item - Strike through
+        if (item.isCompleted()) {
+            holder.titleTextView.setPaintFlags(holder.titleTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.descTextView.setPaintFlags(holder.descTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.dueDateTextView.setPaintFlags(holder.dueDateTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+        } else {
+            holder.titleTextView.setPaintFlags(holder.titleTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            holder.descTextView.setPaintFlags(holder.descTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            holder.dueDateTextView.setPaintFlags(holder.dueDateTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
         }
     }
 

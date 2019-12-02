@@ -178,10 +178,11 @@ public class AddEditTaskViewModel extends ViewModel {
             updateTask(saveTask);
 
         if (dueDate != null && !completed) {
-            Timber.d("알람등록하기.");
+            Timber.d("알람 등록하기.");
             alarmUtils.registerAlarm(saveTask);
-        } else {
-            Timber.d("DueDate is NULL. || This task is completed");
+        } else if(!isAddMode) {
+            Timber.d("알람 취소하기.");
+            alarmUtils.cancelAlarm(taskId);
         }
 
         _saved.postValue(AddEditTaskFragment.SAVED_OK);

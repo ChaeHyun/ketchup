@@ -23,9 +23,14 @@
         </activity>
 
         <receiver
-            android:name=".RegisteredAlarmReceiver"
+            android:name=".ActionReceiver"
             android:enabled="true"
             android:exported="true"></receiver>
+
+        <receiver
+            android:name=".RegisteredAlarmReceiver"
+            android:enabled="true"
+            android:exported="true" />
     </application>
 
     <dist:module dist:instant="true" />

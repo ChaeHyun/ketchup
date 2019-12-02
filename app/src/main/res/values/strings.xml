@@ -35,4 +35,8 @@
     <string name="today">Today</string>
     <string name="err_before_today">현재보다 이전 시간은 설정할 수 없습니다.</string>
     <string name="err_no_task_to_delete">삭제할 Task가 없습니다.</string>
+
+    <string name="noti_action_delete">삭제</string>
+    <string name="noti_action_complete">완료</string>
+    <string name="noti_action_snooze">미루기</string>
 </resources>
