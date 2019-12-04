@@ -7,10 +7,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.navigation.NavDeepLinkBuilder;
 
+import com.ketchup.addedit.AddEditTaskFragment;
 import com.ketchup.model.task.Task;
 
 import timber.log.Timber;
@@ -58,12 +61,14 @@ public class NotificationCreator {
         NotificationCompat.Action snoozeAction = buildNotificationAction(context.getString(R.string.noti_action_snooze), R.drawable.ic_snooze_black_24dp, ActionReceiver.ACTION_SNOOZE, task.getUuid());
         NotificationCompat.Action completeAction = buildNotificationAction(context.getString(R.string.noti_action_complete), R.drawable.ic_done_black_24dp, ActionReceiver.ACTION_COMPLETE, task.getUuid());
 
+        PendingIntent contentPendingIntent = makeContentPendingIntent(task.getUuid());
+
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, notificationChannelId)
                 .setSmallIcon(R.drawable.ic_menu_send)
                 .setContentTitle(task.getTitle())
                 .setContentText(task.getDescription() == null ? "empty" : task.getDescription())
                 .setAutoCancel(true)
-                //.setContentIntent(pendingIntent)
+                .setContentIntent(contentPendingIntent)
                 .addAction(deleteAction)
                 .addAction(snoozeAction)
                 .addAction(completeAction)
@@ -78,6 +83,20 @@ public class NotificationCreator {
 
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
         notificationManagerCompat.notify( "TAG", task.getUuid().hashCode(), notification);
+    }
+
+    private PendingIntent makeContentPendingIntent(String taskId) {
+        Timber.d(" ** Create Content Pending Intent : AddEditTaskFragment Screen");
+        Bundle bundle = new Bundle();
+        bundle.putString(AddEditTaskFragment.TASK_ID, taskId);
+
+        PendingIntent pendingIntent = new NavDeepLinkBuilder(context)
+                .setGraph(R.navigation.navigation)
+                .setDestination(R.id.addEditTaskFragment)
+                .setArguments(bundle)
+                .createPendingIntent();
+
+        return pendingIntent;
     }
 
     private Intent makeActionIntent(String action, String taskId) {

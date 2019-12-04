@@ -97,7 +97,8 @@ public class TaskListFragment extends DaggerFragment {
     public void onDestroy() {
         super.onDestroy();
         Timber.i("[ onDestroy() ]");
-        navController.removeOnDestinationChangedListener(destinationChangedListener);
+        if (navController != null)
+            navController.removeOnDestinationChangedListener(destinationChangedListener);
     }
 
     @Override

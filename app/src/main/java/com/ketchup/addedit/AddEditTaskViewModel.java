@@ -4,10 +4,13 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.ketchup.MainActivity;
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
 import com.ketchup.utils.AlarmUtils;
+import com.ketchup.utils.DateManipulator;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -177,9 +180,17 @@ public class AddEditTaskViewModel extends ViewModel {
         else
             updateTask(saveTask);
 
+
         if (dueDate != null && !completed) {
-            Timber.d("알람 등록하기.");
-            alarmUtils.registerAlarm(saveTask);
+            DateManipulator dm = new DateManipulator(dueDate, MainActivity.DEVICE_LOCALE);
+            if (dm.compareCalendar(Calendar.getInstance(), dm.getCalendar()) >= DateManipulator.IT_IS_TODAY) {
+                Timber.d("알람 등록하기. Date : %s", dueDate);
+                alarmUtils.registerAlarm(saveTask);
+            }
+            else {
+                // Just for checking the logic.
+                Timber.d("현재보다 과거의 Task 는 알람을 등록하지 않습니다. : %s ", dueDate);
+            }
         } else if(!isAddMode) {
             Timber.d("알람 취소하기.");
             alarmUtils.cancelAlarm(taskId);
