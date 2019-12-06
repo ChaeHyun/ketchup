@@ -41,16 +41,16 @@ public interface TaskDao {
     @Query("SELECT * FROM task WHERE completed = :completed")
     List<Task> getTasksCompleted(boolean completed);
 
-    @Query("SELECT * FROM task WHERE date(datetime(dueDate / 1000 , 'unixepoch')) < date('now')")
+    @Query("SELECT * FROM task WHERE date(dueDate / 1000 , 'unixepoch', 'localtime') < date('now', 'localtime')")
     List<Task> getTasksDueDateIsPast();
 
-    @Query("SELECT * FROM task WHERE date(datetime(dueDate / 1000 , 'unixepoch')) = date('now')")
+    @Query("SELECT * FROM task WHERE date(dueDate / 1000 , 'unixepoch', 'localtime') = date('now', 'localtime')")
     List<Task> getTasksDueDateIsToday();
 
-    @Query("SELECT * FROM task WHERE date(datetime(dueDate / 1000 , 'unixepoch')) = date('now', '+1 day')")
+    @Query("SELECT * FROM task WHERE date(dueDate / 1000 , 'unixepoch', 'localtime') = date('now', '+1 day', 'localtime')")
     List<Task> getTasksDueDateIsTomorrow();
 
-    @Query("SELECT * FROM task WHERE date(datetime(dueDate / 1000 , 'unixepoch')) >= date('now', '+1 day')")
+    @Query("SELECT * FROM task WHERE date(dueDate / 1000 , 'unixepoch', 'localtime') >= date('now', '+1 day', 'localtime')")
     List<Task> getTasksDueDateIsFuture();
 
     @Query("SELECT * FROM task WHERE dueDate IS NULL")
