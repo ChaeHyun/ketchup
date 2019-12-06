@@ -13,6 +13,12 @@ import javax.inject.Inject;
 import timber.log.Timber;
 
 public class TaskDataSource implements TaskRepository {
+    public static final int FLAG_TODAY = 1;
+    public static final int FLAG_FUTURE = 2;
+    public static final int FLAG_PAST = 3;
+    public static final int FLAG_NOTE = 4;
+    public static final int FLAG_TOMORROW = 5;
+
     TaskDao dao;
 
     @Inject
@@ -66,7 +72,22 @@ public class TaskDataSource implements TaskRepository {
         dao.deleteAllTasks();
     }
 
-
+    @Override
+    public List<Task> getTasksInCertainPeriod(int flag) {
+        switch (flag) {
+            case FLAG_TODAY:
+                return dao.getTasksDueDateIsToday();
+            case FLAG_FUTURE:
+                return dao.getTasksDueDateIsFuture();
+            case FLAG_PAST:
+                return dao.getTasksDueDateIsPast();
+            case FLAG_NOTE:
+                return dao.getTasksDueDateIsNull();
+            case FLAG_TOMORROW:
+                return dao.getTasksDueDateIsTomorrow();
+        }
+        return null;
+    }
 
     // Test : ViewModel이 아니라 Repository 에서 Thread 처리를 깔끔하게 하기 위해 Callable 을 사용할 경우
     @Override

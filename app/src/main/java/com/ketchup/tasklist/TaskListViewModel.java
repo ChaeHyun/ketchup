@@ -9,6 +9,7 @@ import com.ketchup.di.ActivityScope;
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -146,6 +147,12 @@ public class TaskListViewModel extends ViewModel {
         Executors.newSingleThreadExecutor().execute(() ->
                 taskRepository.deleteAllTask()
         );
+    }
+
+    public void loadTasksInCertainPeriod(int flag) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            _tasks.postValue(taskRepository.getTasksInCertainPeriod(flag));
+        });
     }
 
 

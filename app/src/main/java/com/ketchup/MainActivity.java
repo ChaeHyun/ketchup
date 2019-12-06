@@ -11,7 +11,6 @@ import androidx.core.view.GravityCompat;
 import android.view.MenuItem;
 
 import com.google.android.material.navigation.NavigationView;
-import com.ketchup.tasklist.TaskListFragment;
 import com.ketchup.tasklist.TaskListViewModel;
 import com.ketchup.utils.ToolbarController;
 
@@ -147,35 +146,32 @@ public class MainActivity extends DaggerAppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_home) {
+        if (id == R.id.nav_today) {
             Timber.d("1번메뉴 선택");
             Toast.makeText(this, "1번 메뉴 선택", Toast.LENGTH_LONG).show();
-            toolbarController.setTitle("ALL Tasks");
-
+            //toolbarController.setTitle("Today");
             viewModel.setTaskType(1);
 
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_upcoming) {
             Toast.makeText(this, "2번 메뉴 선택", Toast.LENGTH_LONG).show();
-            toolbarController.setTitle("Uncompleted");
-
-            Bundle bundle = new Bundle();
-            bundle.putInt(TaskListFragment.TASK_FILTER, 5);
-
-            Navigation.findNavController(this, R.id.activity_nav_host_fragment).navigate(R.id.action_task_list_self, bundle);
+            toolbarController.setTitle("Upcoming");
             viewModel.setTaskType(2);
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_overdue) {
             Toast.makeText(this, "3번 메뉴 선택", Toast.LENGTH_LONG).show();
-            toolbarController.setTitle("Completed");
-
+            toolbarController.setTitle("Overdue");
             viewModel.setTaskType(3);
 
-        } else if (id == R.id.nav_tools) {
+        } else if (id == R.id.nav_memo) {
+            toolbarController.setTitle("Memo");
+            viewModel.setTaskType(4);
 
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_tomorrow) {
+            toolbarController.setTitle("Tomorrow");
+            viewModel.setTaskType(5);
 
-        } else if (id == R.id.nav_send) {
-
+        } else if (id == R.id.nav_all_tasks) {
+            viewModel.setTaskType(6);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

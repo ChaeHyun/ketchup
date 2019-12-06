@@ -58,7 +58,7 @@ public class NotificationCreator {
 
     private Notification createNotification(Task task) {
         NotificationCompat.Action deleteAction = buildNotificationAction(context.getString(R.string.noti_action_delete), R.drawable.ic_delete_black_24dp, ActionReceiver.ACTION_DELETE, task.getUuid());
-        NotificationCompat.Action snoozeAction = buildNotificationAction(context.getString(R.string.noti_action_snooze), R.drawable.ic_snooze_black_24dp, ActionReceiver.ACTION_SNOOZE, task.getUuid());
+        NotificationCompat.Action snoozeAction = buildNotificationAction(context.getString(R.string.noti_action_snooze), R.drawable.ic_replay_10_black_24dp, ActionReceiver.ACTION_SNOOZE, task.getUuid());
         NotificationCompat.Action completeAction = buildNotificationAction(context.getString(R.string.noti_action_complete), R.drawable.ic_done_black_24dp, ActionReceiver.ACTION_COMPLETE, task.getUuid());
 
         PendingIntent contentPendingIntent = makeContentPendingIntent(task.getUuid());

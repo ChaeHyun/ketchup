@@ -26,6 +26,8 @@ import com.ketchup.R;
 import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -196,21 +198,31 @@ public class TaskListFragment extends DaggerFragment {
     private void loadTasksByFilter(int filter) {
         switch (filter) {
             case 1:
-                // 전체 Task 가져오기
-                toolbarController.setTitle("All");
-                taskListViewModel.loadTasks();
+                // Task for Today
+                toolbarController.setTitle("오늘 할일");
                 break;
             case 2:
-                // 미완료 Task만 가져오기
-                toolbarController.setTitle("Uncompleted");
-                taskListViewModel.loadTasksCompleted(false);
+                // Task for Upcoming
+                toolbarController.setTitle("다가올 일");
                 break;
             case 3:
-                // 완료된 Task만 가져오기
-                toolbarController.setTitle("Completed");
-                taskListViewModel.loadTasksCompleted(true);
+                // Task for Overdue
+                toolbarController.setTitle("지난 일");
                 break;
+            case 4:
+                // Date Query : Before
+                toolbarController.setTitle("메모");
+                break;
+            case 5:
+                // Date == NULL
+                toolbarController.setTitle("내일");
+                break;
+            case 6:
+                toolbarController.setTitle("모두 보기");
+                taskListViewModel.loadTasks();
+                return;
         }
+        taskListViewModel.loadTasksInCertainPeriod(filter);
     }
 
     private void observeLoading() {
