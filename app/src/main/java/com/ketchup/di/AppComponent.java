@@ -5,6 +5,7 @@ import android.app.Application;
 import android.content.Context;
 
 
+import com.ketchup.DaggerWorkerFactory;
 import com.ketchup.KetchupApplication;
 import com.ketchup.model.AppDatabase;
 import com.ketchup.model.task.TaskDao;
@@ -19,6 +20,7 @@ import dagger.android.support.AndroidSupportInjectionModule;
 
 @Singleton
 @Component(modules = {AppModule.class, RoomModule.class, BroadcastReceiverModule.class,
+        WorkerBindingModule.class,
         AndroidSupportInjectionModule.class,
         ActivityBinder.class})
 public interface AppComponent extends AndroidInjector<KetchupApplication> {
@@ -35,5 +37,6 @@ public interface AppComponent extends AndroidInjector<KetchupApplication> {
     AppDatabase appDatabase();
     TaskDao taskDao();
     TaskRepository taskRepository();
+    DaggerWorkerFactory workerFactory();
 
 }
