@@ -23,7 +23,7 @@ public interface TaskRepository {
     void deleteTask(UUID uuid);
     void deleteAllTask();
 
-    List<Task> getTasksInCertainPeriod(int flag);
+    List<Task> getTasksInCertainPeriod(DateGroup dateGroup);
 
     //test
     Future<List<Task>> getAllTaskAsync() ;

@@ -3,12 +3,13 @@ package com.ketchup;
 
 import androidx.work.Configuration;
 import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.ketchup.di.DaggerAppComponent;
+import com.ketchup.model.task.TaskRepository;
+import com.ketchup.worker.DaggerWorkerFactory;
+import com.ketchup.worker.DailyAlarmRegisterWorker;
 
 import java.util.concurrent.TimeUnit;
 
@@ -24,6 +25,9 @@ public class KetchupApplication extends DaggerApplication {
     @Inject
     DaggerWorkerFactory factory;
 
+    @Inject
+    TaskRepository taskRepository;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -32,13 +36,16 @@ public class KetchupApplication extends DaggerApplication {
         }
 
         configureWorkManager();
-        PeriodicWorkRequest testPeriodicWorkRequest = new PeriodicWorkRequest.Builder(TestWorker.class, 1, TimeUnit.HOURS, 5, TimeUnit.MINUTES)
-                .addTag("TEST")
+        PeriodicWorkRequest testPeriodicWorkRequest = new PeriodicWorkRequest.Builder(
+                DailyAlarmRegisterWorker.class, 12, TimeUnit.HOURS, 1, TimeUnit.HOURS)
+                .addTag("DailyAlarmRegister")
                 .build();
 
         WorkManager workManager = WorkManager.getInstance(this);
-        workManager.enqueueUniquePeriodicWork("TestWorker", ExistingPeriodicWorkPolicy.KEEP, testPeriodicWorkRequest);
+        workManager.enqueueUniquePeriodicWork("DailyWorker", ExistingPeriodicWorkPolicy.KEEP, testPeriodicWorkRequest);
+        workManager.cancelUniqueWork("DailyWorker");
 
+        //testExecutorException();
     }
 
     @Override
@@ -56,4 +63,20 @@ public class KetchupApplication extends DaggerApplication {
 
         WorkManager.initialize(this, config);
     }
+
+//    private void testExecutorException() {
+//        Timber.d("test Executor Exception ");
+//
+//        Thread thread = new Thread("TEST Thread");
+//        //thread.setUncaughtExceptionHandler();
+//        ExecutorService executorService;
+//        executorService = Executors.newSingleThreadExecutor(new TestThreadFactory(new TestUncaughExceptionHandler("HunterExceptionHandler")));
+//
+//        // Catch 없이 예외를 던져본다.
+//        executorService.execute(() -> {
+//            List<Task> taskList = taskRepository.getTasksInCertainPeriod(DateGroup.TOMORROW);
+//            throw new RuntimeException("Runtime Exception is Occurred");
+//        });
+//
+//    }
 }

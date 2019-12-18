@@ -1,7 +1,7 @@
 package com.ketchup.di;
 
-import com.ketchup.ActionReceiver;
-import com.ketchup.RegisteredAlarmReceiver;
+import com.ketchup.receiver.ActionReceiver;
+import com.ketchup.receiver.RegisteredAlarmReceiver;
 
 import dagger.Module;
 import dagger.android.ContributesAndroidInjector;

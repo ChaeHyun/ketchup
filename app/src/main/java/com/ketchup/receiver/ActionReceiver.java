@@ -1,12 +1,12 @@
-package com.ketchup;
+package com.ketchup.receiver;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
 import com.ketchup.utils.AlarmUtils;
+import com.ketchup.utils.NotificationCreator;
 
 import java.util.Date;
 import java.util.UUID;

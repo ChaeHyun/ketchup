@@ -5,7 +5,7 @@ import android.app.Application;
 import android.content.Context;
 
 
-import com.ketchup.DaggerWorkerFactory;
+import com.ketchup.worker.DaggerWorkerFactory;
 import com.ketchup.KetchupApplication;
 import com.ketchup.model.AppDatabase;
 import com.ketchup.model.task.TaskDao;

@@ -1,4 +1,4 @@
-package com.ketchup;
+package com.ketchup.worker;
 
 import android.content.Context;
 
@@ -12,7 +12,6 @@ import com.ketchup.model.task.TaskRepository;
 import com.ketchup.utils.AlarmUtils;
 
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
@@ -27,9 +26,9 @@ public class TestWorker extends Worker {
     AlarmUtils alarmUtils;
     TaskRepository taskRepository;
 
-    public TestWorker(@NonNull Context context, @NonNull WorkerParameters workerParams
+    public TestWorker(@NonNull Context appContext, @NonNull WorkerParameters workerParams
     , TaskRepository taskRepository, AlarmUtils alarmUtils) {
-        super(context, workerParams);
+        super(appContext, workerParams);
         this.taskRepository = taskRepository;
         this.alarmUtils = alarmUtils;
     }
@@ -53,7 +52,7 @@ public class TestWorker extends Worker {
             SimpleDateFormat dateFormat = new SimpleDateFormat("MM월 dd일 HH시 mm분 ss초");
             String now = dateFormat.format(System.currentTimeMillis());
             Task task = new Task(UUID.randomUUID().toString(), now);
-            task.setDescription("Auto-generated");
+            task.setDescription("Auto-generated\ninterval: 15 MIN\nflexTime: 1 MIN");
 
             taskRepository.insertTask(task);
         });

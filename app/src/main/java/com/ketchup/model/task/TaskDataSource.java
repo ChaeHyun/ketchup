@@ -13,11 +13,6 @@ import javax.inject.Inject;
 import timber.log.Timber;
 
 public class TaskDataSource implements TaskRepository {
-    public static final int FLAG_TODAY = 1;
-    public static final int FLAG_FUTURE = 2;
-    public static final int FLAG_PAST = 3;
-    public static final int FLAG_NOTE = 4;
-    public static final int FLAG_TOMORROW = 5;
 
     TaskDao dao;
 
@@ -73,17 +68,17 @@ public class TaskDataSource implements TaskRepository {
     }
 
     @Override
-    public List<Task> getTasksInCertainPeriod(int flag) {
-        switch (flag) {
-            case FLAG_TODAY:
+    public List<Task> getTasksInCertainPeriod(DateGroup dateGroup) {
+        switch (dateGroup) {
+            case TODAY:
                 return dao.getTasksDueDateIsToday();
-            case FLAG_FUTURE:
+            case UPCOMING:
                 return dao.getTasksDueDateIsFuture();
-            case FLAG_PAST:
+            case OVERDUE:
                 return dao.getTasksDueDateIsPast();
-            case FLAG_NOTE:
+            case NOTE:
                 return dao.getTasksDueDateIsNull();
-            case FLAG_TOMORROW:
+            case TOMORROW:
                 return dao.getTasksDueDateIsTomorrow();
         }
         return null;

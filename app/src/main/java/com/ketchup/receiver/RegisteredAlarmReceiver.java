@@ -1,18 +1,17 @@
-package com.ketchup;
+package com.ketchup.receiver;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
+import com.ketchup.utils.NotificationCreator;
 
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-import dagger.android.AndroidInjection;
 import dagger.android.DaggerBroadcastReceiver;
 import timber.log.Timber;
 

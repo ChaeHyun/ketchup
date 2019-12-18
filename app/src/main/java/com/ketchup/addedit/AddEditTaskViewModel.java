@@ -1,5 +1,7 @@
 package com.ketchup.addedit;
 
+import android.widget.Toast;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -183,13 +185,17 @@ public class AddEditTaskViewModel extends ViewModel {
 
         if (dueDate != null && !completed) {
             DateManipulator dm = new DateManipulator(dueDate, MainActivity.DEVICE_LOCALE);
-            if (dm.compareCalendar(Calendar.getInstance(), dm.getCalendar()) >= DateManipulator.IT_IS_TODAY) {
-                Timber.d("알람 등록하기. Date : %s", dueDate);
+            if (dm.compareCalendar(Calendar.getInstance(), dm.getCalendar()) == DateManipulator.IT_IS_TODAY) {
+                Timber.d("알람 등록하기(TODAY) Date : %s", dueDate);
+                alarmUtils.registerAlarm(saveTask);
+            }
+            else if (dm.isTomorrow(Calendar.getInstance(), dm.getCalendar())) {
+                Timber.d("알람 등록하기(TMRW) Date : %s", dm.getDateString());
                 alarmUtils.registerAlarm(saveTask);
             }
             else {
                 // Just for checking the logic.
-                Timber.d("현재보다 과거의 Task 는 알람을 등록하지 않습니다. : %s ", dueDate);
+                Timber.d("현재보다 과거의 Task 혹은 내일보다 먼 미래의 Task는 알람을 등록하지 않습니다. : %s ", dueDate);
             }
         } else if(!isAddMode) {
             Timber.d("알람 취소하기.");

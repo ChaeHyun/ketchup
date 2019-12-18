@@ -1,7 +1,8 @@
 package com.ketchup.di;
 
-import com.ketchup.ChildWorkerFactory;
-import com.ketchup.TestWorker;
+import com.ketchup.worker.ChildWorkerFactory;
+import com.ketchup.worker.DailyAlarmRegisterWorker;
+import com.ketchup.worker.TestWorker;
 
 import dagger.Binds;
 import dagger.Module;
@@ -13,4 +14,9 @@ public interface WorkerBindingModule {
     @IntoMap
     @WorkerKey(TestWorker.class)
     ChildWorkerFactory bindTestWorker(TestWorker.Factory factory);
+
+    @Binds
+    @IntoMap
+    @WorkerKey(DailyAlarmRegisterWorker.class)
+    ChildWorkerFactory bindDailyAlarmRegisterWorker(DailyAlarmRegisterWorker.Factory factory);
 }

@@ -1,4 +1,4 @@
-package com.ketchup;
+package com.ketchup.worker;
 
 import android.content.Context;
 

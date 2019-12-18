@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.ketchup.di.ActivityScope;
+import com.ketchup.model.task.DateGroup;
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
 
@@ -35,8 +36,8 @@ public class TaskListViewModel extends ViewModel {
     private LiveData<Boolean> loading = _loading;
 
     // Added for configuring what type of task should be retrieved.
-    private MutableLiveData<Integer> _task_filter = new MutableLiveData<>();
-    private LiveData<Integer> task_filter = _task_filter;
+    private MutableLiveData<DateGroup> _task_filter = new MutableLiveData<>();
+    private LiveData<DateGroup> task_filter = _task_filter;
 
 
     @Inject
@@ -44,7 +45,7 @@ public class TaskListViewModel extends ViewModel {
         this.taskRepository = taskRepository;
     }
 
-    public LiveData<Integer> getTaskFilter() {
+    public LiveData<DateGroup> getTaskFilter() {
         return task_filter;
     }
 
@@ -60,8 +61,8 @@ public class TaskListViewModel extends ViewModel {
         return loading;
     }
 
-    public void setTaskType(int type) {
-        _task_filter.postValue(type);
+    public void setTaskType(DateGroup dateGroup) {
+        _task_filter.postValue(dateGroup);
     }
 
     // @Ignore : Only use for LiveData Testing.
@@ -149,9 +150,9 @@ public class TaskListViewModel extends ViewModel {
         );
     }
 
-    public void loadTasksInCertainPeriod(int flag) {
+    public void loadTasksInCertainPeriod(DateGroup dateGroup) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            _tasks.postValue(taskRepository.getTasksInCertainPeriod(flag));
+            _tasks.postValue(taskRepository.getTasksInCertainPeriod(dateGroup));
         });
     }
 

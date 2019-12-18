@@ -1,4 +1,4 @@
-package com.ketchup;
+package com.ketchup.di;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;

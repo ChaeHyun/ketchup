@@ -140,6 +140,11 @@ public class DateManipulator {
                 && (now.get(Calendar.DATE) == target.get(Calendar.DATE)));
     }
 
+    public boolean isTomorrow(Calendar now, Calendar target) {
+        now.add(Calendar.DATE, 1);
+        return isToday(now, target);
+    }
+
     public int compareCalendar(Calendar now, Calendar target) {
         if (isToday(now, target)) {
             if (target.before(now))

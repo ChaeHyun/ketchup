@@ -19,15 +19,14 @@ import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.ketchup.addedit.AddEditTaskFragment;
+import com.ketchup.model.task.DateGroup;
 import com.ketchup.utils.AnchoringFab;
 import com.ketchup.utils.ContextCompatUtils;
-import com.ketchup.DaggerViewModelFactory;
+import com.ketchup.di.DaggerViewModelFactory;
 import com.ketchup.R;
 import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -39,7 +38,7 @@ import timber.log.Timber;
 public class TaskListFragment extends DaggerFragment {
 
     private List<Task> cachedTaskList;
-    private int cachedFilter = 1;
+    private DateGroup cachedDateGroupFilter = DateGroup.TODAY;
     private TaskAdapter taskAdapter;
     private EmptyRecyclerView recyclerView;
 
@@ -113,7 +112,7 @@ public class TaskListFragment extends DaggerFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Timber.i("[ onViewCreated() ] , cachedFilter : %d", cachedFilter);
+        Timber.i("[ onViewCreated() ] , cachedDateGroupFilter : %d", cachedDateGroupFilter.ordinal());
 
         // View Binding.
         setupToolbar();
@@ -129,7 +128,7 @@ public class TaskListFragment extends DaggerFragment {
         navController = NavHostFragment.findNavController(this);
         navController.addOnDestinationChangedListener(destinationChangedListener);
 
-        loadTasksByFilter(cachedFilter);
+        loadTasksByFilter(cachedDateGroupFilter);
     }
 
 
@@ -185,44 +184,44 @@ public class TaskListFragment extends DaggerFragment {
     }
 
     private void observeFilter() {
-        taskListViewModel.getTaskFilter().observe(this, new Observer<Integer>() {
+        taskListViewModel.getTaskFilter().observe(this, new Observer<DateGroup>() {
             @Override
-            public void onChanged(Integer filter) {
-                Timber.d("[ Filter Value Check ] : %d ", filter);
-                cachedFilter = filter;
-                loadTasksByFilter(filter);
+            public void onChanged(DateGroup dateGroup) {
+                Timber.d("[ Filter Value Check ] : %d ", dateGroup.ordinal());
+                cachedDateGroupFilter = dateGroup;
+                loadTasksByFilter(dateGroup);
             }
         });
     }
 
-    private void loadTasksByFilter(int filter) {
-        switch (filter) {
-            case 1:
+    private void loadTasksByFilter(DateGroup dateGroup) {
+        switch (dateGroup) {
+            case TODAY:
                 // Task for Today
                 toolbarController.setTitle("오늘 할일");
                 break;
-            case 2:
+            case UPCOMING:
                 // Task for Upcoming
                 toolbarController.setTitle("다가올 일");
                 break;
-            case 3:
+            case OVERDUE:
                 // Task for Overdue
                 toolbarController.setTitle("지난 일");
                 break;
-            case 4:
+            case NOTE:
                 // Date Query : Before
                 toolbarController.setTitle("메모");
                 break;
-            case 5:
+            case TOMORROW:
                 // Date == NULL
                 toolbarController.setTitle("내일");
                 break;
-            case 6:
+            case ALL:
                 toolbarController.setTitle("모두 보기");
                 taskListViewModel.loadTasks();
                 return;
         }
-        taskListViewModel.loadTasksInCertainPeriod(filter);
+        taskListViewModel.loadTasksInCertainPeriod(dateGroup);
     }
 
     private void observeLoading() {

@@ -11,6 +11,8 @@ import androidx.core.view.GravityCompat;
 import android.view.MenuItem;
 
 import com.google.android.material.navigation.NavigationView;
+import com.ketchup.di.DaggerViewModelFactory;
+import com.ketchup.model.task.DateGroup;
 import com.ketchup.tasklist.TaskListViewModel;
 import com.ketchup.utils.ToolbarController;
 
@@ -78,7 +80,7 @@ public class MainActivity extends DaggerAppCompatActivity
         NavigationUI.setupActionBarWithNavController(this, navController, toolbarController.getDrawer());
 
         navigationView.getMenu().getItem(0).setChecked(true);
-        viewModel.setTaskType(1);
+        viewModel.setTaskType(DateGroup.TODAY);
     }
 
     private void setupNavController() {
@@ -150,28 +152,28 @@ public class MainActivity extends DaggerAppCompatActivity
             Timber.d("1번메뉴 선택");
             Toast.makeText(this, "1번 메뉴 선택", Toast.LENGTH_LONG).show();
             //toolbarController.setTitle("Today");
-            viewModel.setTaskType(1);
+            viewModel.setTaskType(DateGroup.TODAY);
 
         } else if (id == R.id.nav_upcoming) {
             Toast.makeText(this, "2번 메뉴 선택", Toast.LENGTH_LONG).show();
             toolbarController.setTitle("Upcoming");
-            viewModel.setTaskType(2);
+            viewModel.setTaskType(DateGroup.UPCOMING);
 
         } else if (id == R.id.nav_overdue) {
             Toast.makeText(this, "3번 메뉴 선택", Toast.LENGTH_LONG).show();
             toolbarController.setTitle("Overdue");
-            viewModel.setTaskType(3);
+            viewModel.setTaskType(DateGroup.OVERDUE);
 
         } else if (id == R.id.nav_memo) {
             toolbarController.setTitle("Memo");
-            viewModel.setTaskType(4);
+            viewModel.setTaskType(DateGroup.NOTE);
 
         } else if (id == R.id.nav_tomorrow) {
             toolbarController.setTitle("Tomorrow");
-            viewModel.setTaskType(5);
+            viewModel.setTaskType(DateGroup.TOMORROW);
 
         } else if (id == R.id.nav_all_tasks) {
-            viewModel.setTaskType(6);
+            viewModel.setTaskType(DateGroup.ALL);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
