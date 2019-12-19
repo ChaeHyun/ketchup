@@ -56,6 +56,7 @@ public class TaskListFragment extends DaggerFragment {
 
     public static String TASK_FILTER = "task_filter";
     public static String NEW_TASK_ID = "new_task_id";
+    public static String ADD_MODE = "ADD_MODE";
 
 
     public TaskListFragment() {
@@ -121,7 +122,7 @@ public class TaskListFragment extends DaggerFragment {
 
         if (getArguments() != null) {
             Timber.i("TASK_FILTER : %d ", getArguments().getInt(TASK_FILTER));
-            Timber.i("전송받은 ADD_MODE 값 : %s", getArguments().getBoolean("ADD_MODE"));
+            Timber.i("전송받은 ADD_MODE 값 : %s", getArguments().getBoolean(ADD_MODE));
             Timber.i("전송받은 NEW_TASK_ID 값 : %s", getArguments().getString(NEW_TASK_ID));
         }
 

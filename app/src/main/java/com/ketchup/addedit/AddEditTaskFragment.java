@@ -53,7 +53,6 @@ import timber.log.Timber;
 
 /**
  * A simple {@link Fragment} subclass.
- * before refactoring : 600 lines. Too many logic in View area. Lets move some logic to viewModel.
  */
 public class AddEditTaskFragment extends DaggerFragment
         implements View.OnClickListener, CompoundButton.OnCheckedChangeListener,
@@ -257,8 +256,9 @@ public class AddEditTaskFragment extends DaggerFragment
                 Timber.d("Success to save a Task to DB");
                 // navigate to task list fragment
                 Bundle bundle = new Bundle();
-                Timber.d("전송하는 NEW_TASK_ID 값 : %s", taskId);
-                bundle.putString(TaskListFragment.NEW_TASK_ID, taskId);
+                Timber.d("전송하는 NEW_TASK_ID 값 : %s", viewModel.getTaskID());
+                bundle.putBoolean(TaskListFragment.ADD_MODE, taskId == null);
+                bundle.putString(TaskListFragment.NEW_TASK_ID, viewModel.getTaskID());
                 navController.navigate(R.id.action_addEditTaskFragment_to_task_list, bundle);
             }
 

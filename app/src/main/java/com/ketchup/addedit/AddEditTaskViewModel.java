@@ -125,6 +125,10 @@ public class AddEditTaskViewModel extends ViewModel {
         _loading.postValue(isLoading);
     }
 
+    public String getTaskID() {
+        return taskId;
+    }
+
     public void load(final String uuid) {
         if (_loading.getValue() == null || _loading.getValue())
             return;
