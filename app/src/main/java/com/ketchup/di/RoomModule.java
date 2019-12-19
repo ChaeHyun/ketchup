@@ -7,6 +7,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.ketchup.AppExecutors;
 import com.ketchup.model.AppDatabase;
 import com.ketchup.model.task.DummyTask;
 import com.ketchup.model.task.TaskDao;
@@ -15,6 +16,7 @@ import com.ketchup.model.task.TaskRepository;
 
 import java.util.concurrent.Executors;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -50,9 +52,9 @@ public class RoomModule {
 
     @Singleton
     @Provides
-    public TaskRepository providesTaskRepository(TaskDao taskDao) {
+    public TaskRepository providesTaskRepository(TaskDao taskDao, AppExecutors appExecutors) {
         Timber.v("[ TaskRepository ] is provided. ");
-        return new TaskDataSource(taskDao);
+        return new TaskDataSource(taskDao, appExecutors);
     }
 
     private AppDatabase getAppDatabaseInstance() {

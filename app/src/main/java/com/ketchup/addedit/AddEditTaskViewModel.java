@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.ketchup.AppExecutors;
 import com.ketchup.MainActivity;
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
@@ -15,6 +16,7 @@ import com.ketchup.utils.DateManipulator;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
@@ -24,6 +26,8 @@ import timber.log.Timber;
 
 public class AddEditTaskViewModel extends ViewModel {
 
+    private AppExecutors appExecutors;
+    private ExecutorService diskIO;
     private TaskRepository taskRepository;
 
     private MutableLiveData<Boolean> _loading = new MutableLiveData<>();
@@ -58,8 +62,10 @@ public class AddEditTaskViewModel extends ViewModel {
     AlarmUtils alarmUtils;
 
     @Inject
-    public AddEditTaskViewModel(TaskRepository taskRepository) {
+    public AddEditTaskViewModel(TaskRepository taskRepository, AppExecutors appExecutors) {
         this.taskRepository = taskRepository;
+        this.appExecutors = appExecutors;
+        this.diskIO = appExecutors.diskIO();
         _loading.setValue(false);
     }
 
@@ -139,7 +145,7 @@ public class AddEditTaskViewModel extends ViewModel {
     // when : taskId != null
     private void loadTaskByUuid(final String uuid) {
         Timber.d("[ loadTaskByUuid] : %s", uuid);
-        Executors.newSingleThreadExecutor().execute(() -> {
+        diskIO.execute(() -> {
             final Task result = taskRepository.getTask(UUID.fromString(uuid));
             _task.postValue(result);
             updateLoadedTaskToView(result);
@@ -210,19 +216,16 @@ public class AddEditTaskViewModel extends ViewModel {
         if (task == null)
             return;
         Timber.i("[ updateTask ] : repo.updateTask(Task)");
-        Executors.newSingleThreadExecutor().execute(() ->
-                taskRepository.updateTask(task)
-        );
+        taskRepository.updateTask(task);
     }
 
     private void insertTask(final Task task) {
         if (task == null) {
             return;
         }
-        Executors.newSingleThreadExecutor().execute(() -> {
-            Timber.i("[ insertTask ] : repo.insertTask(Task)");
-            taskRepository.insertTask(task);
-        });
+
+        Timber.i("[ insertTask ] : repo.insertTask(Task)");
+        taskRepository.insertTask(task);
     }
 
     public void deleteTask(final String uuid, final Date dueDate) {
@@ -230,11 +233,10 @@ public class AddEditTaskViewModel extends ViewModel {
             _saved.postValue(AddEditTaskFragment.SAVED_FAIL);
             return;
         }
-        Executors.newSingleThreadExecutor().execute(() -> {
-            taskRepository.deleteTask(UUID.fromString(uuid));
-            if (dueDate != null) // plus  && dueDate == TODAY
-                alarmUtils.cancelAlarm(uuid);
-        });
-        _saved.postValue(AddEditTaskFragment.SAVED_OK);
+        taskRepository.deleteTask(UUID.fromString(uuid));
+        if (dueDate != null) // plus  && dueDate == TODAY
+            alarmUtils.cancelAlarm(uuid);
+
+        _saved.postValue(AddEditTaskFragment.SAVED_OK);     // The role of terminating AddEditTaskFragment
     }
 }

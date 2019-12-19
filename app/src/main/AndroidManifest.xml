@@ -24,12 +24,12 @@
         </activity>
 
         <receiver
-            android:name=".ActionReceiver"
+            android:name=".receiver.ActionReceiver"
             android:enabled="true"
             android:exported="true"></receiver>
 
         <receiver
-            android:name=".RegisteredAlarmReceiver"
+            android:name=".receiver.RegisteredAlarmReceiver"
             android:enabled="true"
             android:exported="true" />
 

@@ -45,7 +45,6 @@ public class KetchupApplication extends DaggerApplication {
         workManager.enqueueUniquePeriodicWork("DailyWorker", ExistingPeriodicWorkPolicy.KEEP, testPeriodicWorkRequest);
         workManager.cancelUniqueWork("DailyWorker");
 
-        //testExecutorException();
     }
 
     @Override
@@ -63,20 +62,4 @@ public class KetchupApplication extends DaggerApplication {
 
         WorkManager.initialize(this, config);
     }
-
-//    private void testExecutorException() {
-//        Timber.d("test Executor Exception ");
-//
-//        Thread thread = new Thread("TEST Thread");
-//        //thread.setUncaughtExceptionHandler();
-//        ExecutorService executorService;
-//        executorService = Executors.newSingleThreadExecutor(new TestThreadFactory(new TestUncaughExceptionHandler("HunterExceptionHandler")));
-//
-//        // Catch 없이 예외를 던져본다.
-//        executorService.execute(() -> {
-//            List<Task> taskList = taskRepository.getTasksInCertainPeriod(DateGroup.TOMORROW);
-//            throw new RuntimeException("Runtime Exception is Occurred");
-//        });
-//
-//    }
 }

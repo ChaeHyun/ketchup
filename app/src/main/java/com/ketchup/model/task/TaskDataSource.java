@@ -1,6 +1,8 @@
 package com.ketchup.model.task;
 
 
+import com.ketchup.AppExecutors;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -14,12 +16,16 @@ import timber.log.Timber;
 
 public class TaskDataSource implements TaskRepository {
 
-    TaskDao dao;
+    private AppExecutors appExecutors;
+    private ExecutorService diskIO;
+    private TaskDao dao;
 
     @Inject
-    public TaskDataSource(TaskDao taskDao) {
+    public TaskDataSource(TaskDao taskDao, AppExecutors appExecutors) {
         Timber.v("Constructor[TaskDataSource] : TaskDao is provided to TaskDataSource.");
         this.dao = taskDao;
+        this.appExecutors = appExecutors;
+        this.diskIO = appExecutors.diskIO();
     }
 
     @Override
@@ -43,28 +49,28 @@ public class TaskDataSource implements TaskRepository {
     }
 
     @Override
-    public void insertTask(Task task) {
-        dao.insertTask(task);
+    public void insertTask(final Task task) {
+        diskIO.execute(() -> dao.insertTask(task));
     }
 
     @Override
-    public void insertTasks(List<Task> tasks) {
-        dao.insertAllTasks(tasks);
+    public void insertTasks(final List<Task> tasks) {
+        diskIO.execute(() ->  dao.insertAllTasks(tasks));
     }
 
     @Override
-    public void updateTask(Task task) {
-        dao.updateTask(task);
+    public void updateTask(final Task task) {
+        diskIO.execute(() -> dao.updateTask(task));
     }
 
     @Override
-    public void deleteTask(UUID uuid) {
-        dao.deleteTask(uuid.toString());
+    public void deleteTask(final UUID uuid) {
+        diskIO.execute(() -> dao.deleteTask(uuid.toString()));
     }
 
     @Override
     public void deleteAllTask() {
-        dao.deleteAllTasks();
+        diskIO.execute(() -> dao.deleteAllTasks());
     }
 
     @Override
