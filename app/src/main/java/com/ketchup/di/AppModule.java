@@ -5,8 +5,10 @@ import android.content.Context;
 import android.util.Log;
 
 
+import com.ketchup.model.exception.DiskUncaughtExceptionHandler;
 import com.ketchup.utils.AlarmUtils;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -27,6 +29,13 @@ public class AppModule {
     AlarmUtils provideAlarmUtils(Context context) {
         Timber.d("[ AlarmUtils is provided. ]");
         return new AlarmUtils(context);
+    }
+
+    @Singleton
+    @Provides
+    @Named("diskIO")
+    Thread.UncaughtExceptionHandler provideDiskUncaughtExceptionHandler() {
+        return new DiskUncaughtExceptionHandler();
     }
 
 }

@@ -22,11 +22,9 @@ public class AppExecutors {
 
 
     @Inject
-    public AppExecutors() {
+    public AppExecutors(DiskIOThreadFactory threadFactory) {
         Timber.d("[ AppExecutors is created. ] ");
-        this.diskIO = Executors.newSingleThreadExecutor(
-            new DiskIOThreadFactory(new DiskUncaughtExceptionHandler())
-        );
+        this.diskIO = Executors.newSingleThreadExecutor(threadFactory);
         this.mainThread = new MainThreadExecutor();
     }
 

@@ -7,10 +7,12 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.ketchup.di.DaggerAppComponent;
+import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
 import com.ketchup.worker.DaggerWorkerFactory;
 import com.ketchup.worker.DailyAlarmRegisterWorker;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -27,6 +29,9 @@ public class KetchupApplication extends DaggerApplication {
 
     @Inject
     TaskRepository taskRepository;
+
+    @Inject
+    AppExecutors appExecutors;
 
     @Override
     public void onCreate() {
@@ -45,6 +50,7 @@ public class KetchupApplication extends DaggerApplication {
         workManager.enqueueUniquePeriodicWork("DailyWorker", ExistingPeriodicWorkPolicy.KEEP, testPeriodicWorkRequest);
         workManager.cancelUniqueWork("DailyWorker");
 
+        test();
     }
 
     @Override
@@ -61,5 +67,15 @@ public class KetchupApplication extends DaggerApplication {
                 .build();
 
         WorkManager.initialize(this, config);
+    }
+
+    private void test() {
+        appExecutors.diskIO().execute(() -> {
+            List<Task> tasks = taskRepository.getAllTasks();
+
+            Timber.d("The size of TaskList : %d", tasks.size());
+
+            throw new RuntimeException("런타임 에러 발생");
+        });
     }
 }

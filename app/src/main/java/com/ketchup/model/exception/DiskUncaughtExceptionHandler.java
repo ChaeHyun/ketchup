@@ -1,12 +1,17 @@
 package com.ketchup.model.exception;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import timber.log.Timber;
 
 
 // 각기 다른 UncaughtExceptionHandle을 위해서 여러개가 생성될 수 있다.
+@Singleton
 public class DiskUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
     private final static String handlerName = "ExceptionHandler : DISK_IO";
 
+    @Inject
     public DiskUncaughtExceptionHandler() {
         Timber.d("Test Uncaught Exception Handler 생성");
     }
