@@ -7,6 +7,8 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import com.ketchup.model.CategoryWithTasks;
+
 import java.util.Date;
 import java.util.List;
 
@@ -55,4 +57,12 @@ public interface TaskDao {
 
     @Query("SELECT * FROM task WHERE dueDate IS NULL")
     List<Task> getTasksDueDateIsNull();
+
+
+    // Control CategoryWithTasks
+    // where categoryId == personal의 하면 or
+    // where categoryName = :nameOfCategory
+    // 특정 카테고리에 속한 Task List를 결과물로 얻을 수 있다.
+//    @Query("SELECT * FROM category")
+//    List<CategoryWithTasks> getCategoryWithTasks();
 }

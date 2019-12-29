@@ -8,10 +8,12 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
+import com.ketchup.AdapterType;
+
 import java.util.Date;
 
 @Entity(tableName="task")
-public class Task {
+public class Task implements AdapterType {
     @NonNull
     @PrimaryKey
     private String uuid;
@@ -22,6 +24,9 @@ public class Task {
     private boolean completed;
     private int colorLabel;
     private Date dueDate;
+
+    @TypeConverters(ItemType.class)
+    private ItemType itemType = ItemType.CHILD;
 
     public static final int DEFAULT_COLOR = Color.rgb(215, 204, 200);
 
@@ -117,4 +122,14 @@ public class Task {
     public void setDueDate(Date dueDate) {
         this.dueDate = dueDate;
     }
+
+    public void setItemType(ItemType itemType) {
+        this.itemType = itemType;
+    }
+
+    @Override
+    public ItemType getItemType() {
+        return itemType;
+    }
+
 }

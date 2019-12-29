@@ -18,7 +18,10 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.ketchup.AdapterType;
 import com.ketchup.addedit.AddEditTaskFragment;
+import com.ketchup.model.Category;
+import com.ketchup.model.CategoryWithTasks;
 import com.ketchup.model.task.DateGroup;
 import com.ketchup.utils.AnchoringFab;
 import com.ketchup.utils.ContextCompatUtils;
@@ -27,7 +30,9 @@ import com.ketchup.R;
 import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -41,6 +46,8 @@ public class TaskListFragment extends DaggerFragment {
     private DateGroup cachedDateGroupFilter = DateGroup.TODAY;
     private TaskAdapter taskAdapter;
     private EmptyRecyclerView recyclerView;
+
+    private TaskAdapterRenewal taskAdapterRenewal;
 
     @Inject
     DaggerViewModelFactory viewModelFactory;
@@ -153,7 +160,8 @@ public class TaskListFragment extends DaggerFragment {
 
     private void setupEmptyRecyclerView() {
         if (getActivity() != null) {
-            taskAdapter = new TaskAdapter(NavHostFragment.findNavController(this));
+            //taskAdapter = new TaskAdapter(NavHostFragment.findNavController(this));
+            taskAdapterRenewal = new TaskAdapterRenewal();
 
             // EmptyRecyclerView Init
             recyclerView = getActivity().findViewById(R.id.fragment_task_list_recycler_view);
@@ -161,7 +169,8 @@ public class TaskListFragment extends DaggerFragment {
             recyclerView.setEmptyView(getActivity().findViewById(R.id.fragment_task_list_empty_item));
             recyclerView.setNestedScrollingEnabled(false);
 
-            recyclerView.setAdapter(taskAdapter);
+            //recyclerView.setAdapter(taskAdapter);
+            recyclerView.setAdapter(taskAdapterRenewal);
         }
     }
 
@@ -238,14 +247,54 @@ public class TaskListFragment extends DaggerFragment {
         });
     }
 
+    // 현재 DB에서 데이터를 꺼내오는 형태는 List<Task> 이다.
+    // 업데이트하고 싶은 데이터 형태는 List<CategoryWithTasks>이다.
+    // DB에서 List<CategoryWithTasks로 데이터를 꺼내기 위해서는 사전 작업이 필요하다.
+    // 우선 현재 받아온 List<Task> 수작업으로 List<CategoryWithTasks>로 바꾸는 작업을 해보자.
+
     private void observeTasks() {
         taskListViewModel.getTasks().observe(this, list -> {
             Timber.d("[ Observer in TaskListFragment for List<Task>]");
             //listTestPrinting("observerTasks()", list);
 
             cachedTaskList = list;
-            taskAdapter.setTasks(list);
+            //taskAdapter.setTasks(list);
+
+            List<Task> uncompletedTaskList = filterCompleted(list, false);
+            List<Task> completedTaskList = filterCompleted(list, true);
+
+            Category categoryCom = new Category(UUID.randomUUID().toString(), "완료");
+            Category categoryUncom = new Category(UUID.randomUUID().toString(), "미완료");
+            CategoryWithTasks categoryWithTasks1 = new CategoryWithTasks(categoryCom, completedTaskList);
+            CategoryWithTasks categoryWithTasks2 = new CategoryWithTasks(categoryUncom, uncompletedTaskList);
+            // 확인
+            print(categoryWithTasks1);
+            print(categoryWithTasks2);
+
+            List<AdapterType> data = new ArrayList<>();
+            data.add(categoryWithTasks1);
+            data.add(categoryWithTasks2);
+
+            taskAdapterRenewal.setData(data);
         });
+    }
+
+    private void print(CategoryWithTasks input) {
+        String title = input.category.getName();
+        Timber.d("[ %s, %s ]", title, input.getItemType());
+        for (Task t : input.tasks) {
+            Timber.d("  (%s, %s, %s)", t.getTitle(), t.isCompleted(), t.getItemType());
+        }
+    }
+
+    private List<Task> filterCompleted(List<Task> input, boolean complete) {
+        List<Task> result = new ArrayList<>();
+        for (Task task : input) {
+            if (task.isCompleted() == complete)
+                result.add(task);
+        }
+
+        return result;
     }
 
     private void listTestPrinting(String title, List<Task> list) {
