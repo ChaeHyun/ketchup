@@ -161,7 +161,7 @@ public class TaskListFragment extends DaggerFragment {
     private void setupEmptyRecyclerView() {
         if (getActivity() != null) {
             //taskAdapter = new TaskAdapter(NavHostFragment.findNavController(this));
-            taskAdapterRenewal = new TaskAdapterRenewal();
+            taskAdapterRenewal = new TaskAdapterRenewal(NavHostFragment.findNavController(this));
 
             // EmptyRecyclerView Init
             recyclerView = getActivity().findViewById(R.id.fragment_task_list_recycler_view);
@@ -260,28 +260,28 @@ public class TaskListFragment extends DaggerFragment {
             cachedTaskList = list;
             //taskAdapter.setTasks(list);
 
+            Category categoryUncom = new Category(UUID.randomUUID().toString(), "미완료");
+            Category categoryCom = new Category(UUID.randomUUID().toString(), "완료");
+
             List<Task> uncompletedTaskList = filterCompleted(list, false);
             List<Task> completedTaskList = filterCompleted(list, true);
 
-            Category categoryCom = new Category(UUID.randomUUID().toString(), "완료");
-            Category categoryUncom = new Category(UUID.randomUUID().toString(), "미완료");
-            CategoryWithTasks categoryWithTasks1 = new CategoryWithTasks(categoryCom, completedTaskList);
-            CategoryWithTasks categoryWithTasks2 = new CategoryWithTasks(categoryUncom, uncompletedTaskList);
-            // 확인
-            print(categoryWithTasks1);
-            print(categoryWithTasks2);
+            CategoryWithTasks categoryWithTasksUncom = new CategoryWithTasks(categoryUncom, uncompletedTaskList, false);
+            CategoryWithTasks categoryWithTasksCom = new CategoryWithTasks(categoryCom, completedTaskList, true);
 
             List<AdapterType> data = new ArrayList<>();
-            data.add(categoryWithTasks1);
-            data.add(categoryWithTasks2);
-
+            data.add(categoryWithTasksUncom);
+            data.add(categoryWithTasksCom);
+            // 확인
+            print(categoryWithTasksUncom);
+            print(categoryWithTasksCom);
             taskAdapterRenewal.setData(data);
         });
     }
 
     private void print(CategoryWithTasks input) {
         String title = input.category.getName();
-        Timber.d("[ %s, %s ]", title, input.getItemType());
+        Timber.d("[ %s, %s , %s]", title, input.getItemType(), input.category.isFolded());
         for (Task t : input.tasks) {
             Timber.d("  (%s, %s, %s)", t.getTitle(), t.isCompleted(), t.getItemType());
         }

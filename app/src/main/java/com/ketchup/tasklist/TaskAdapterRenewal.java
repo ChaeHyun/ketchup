@@ -5,8 +5,10 @@ import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.NavController;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ketchup.AdapterType;
@@ -16,6 +18,7 @@ import com.ketchup.model.task.ItemType;
 import com.ketchup.model.task.Task;
 import com.ketchup.utils.DateManipulator;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -24,38 +27,50 @@ import timber.log.Timber;
 
 public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    private View view = null;
     private List<AdapterType> data;
 
-    public TaskAdapterRenewal() {
+    private NavController navController;
+
+    public TaskAdapterRenewal(NavController navController) {
         super();
         //this.data = data;
+        this.navController = navController;
     }
 
     public void setData(List<AdapterType> data) {
+        /* HEADER일때 folded == false이면 Child Item 추가시켜준다. */
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i).getItemType() == ItemType.HEADER) {
+                addChildTasks(data, i);
+            }
+        }
         this.data = data;
         notifyDataSetChanged();
     }
 
-    public void setTasks(List<Task> tasks) {
-
+    private void addChildTasks(final List<AdapterType> data, int pos) {
+        CategoryWithTasks header = (CategoryWithTasks) data.get(pos);
+        Timber.d("HEADER : %s", header.category.isFolded());
+        if (!header.category.isFolded()) {
+            data.addAll(pos+1, header.tasks);
+        }
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = null;
         ItemType type = ItemType.getItemType(viewType);
 
         switch (type) {
             case HEADER:
-                LayoutInflater inflater = (LayoutInflater) parent.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.header_item, parent, false);
-
+                view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.header_item, parent, false);
                 return new HeaderViewHolder(view);
             case CHILD:
-                inflater = (LayoutInflater) parent.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.task_item, parent, false);
-                return new TaskViewHolder(view);
+                view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.task_item, parent, false);
+                return new TaskViewHolder(view, navController);
         }
         return null;
     }
@@ -71,10 +86,11 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
                 headerViewHolder.headerPosition = item;
                 headerViewHolder.header_title.setText(header.category.getName());
 
+                // folded == true -> 접혀있는 상태이다
                 if (header.category.isFolded())
-                    headerViewHolder.header_icon.setImageResource(R.drawable.ic_arrow_drop_up_black_24dp);
-                else
                     headerViewHolder.header_icon.setImageResource(R.drawable.ic_arrow_drop_down_black_24dp);
+                else
+                    headerViewHolder.header_icon.setImageResource(R.drawable.ic_arrow_drop_up_black_24dp);
 
                 // onClick Listener for the icon  - fold / unfold
                 headerViewHolder.header_icon.setOnClickListener(view -> {
@@ -106,36 +122,46 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
             case CHILD:
                 final Task task = (Task) item;
                 final TaskViewHolder childViewHolder = (TaskViewHolder) holder;
+                TextView titleTextView = childViewHolder.getTitleTextView();
+                TextView descTextView = childViewHolder.getDescTextView();
+                TextView dueDateTextView = childViewHolder.getDueDateTextView();
 
                 childViewHolder.setTaskId(task.getUuid());
-                childViewHolder.getTitleTextView().setText(task.getTitle());
-                childViewHolder.getDescTextView().setText(task.getDescription());
+                titleTextView.setText(task.getTitle());
+                descTextView.setText(task.getDescription());
                 childViewHolder.getColorLabel().setBackgroundColor(task.getColorLabel());
 
                 if (task.getDueDate() != null) {
                     DateManipulator dm = new DateManipulator(task.getDueDate(), Locale.KOREA);
-                    childViewHolder.getDueDateTextView().setText(dm.getDateString(task.getDueDate()));
-                    childViewHolder.getDueDateTextView().setVisibility(View.VISIBLE);
+                    dueDateTextView.setText(dm.getDateString(task.getDueDate()));
+                    dueDateTextView.setVisibility(View.VISIBLE);
                 } else {
-                    childViewHolder.getDueDateTextView().setText(null);
-                    childViewHolder.getDueDateTextView().setVisibility(View.GONE);
+                    dueDateTextView.setText(null);
+                    dueDateTextView.setVisibility(View.GONE);
                 }
 
-                if (task.isCompleted()) {
-                    childViewHolder.getTitleTextView().setPaintFlags(childViewHolder.getTitleTextView().getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                    childViewHolder.getDescTextView().setPaintFlags(childViewHolder.getDescTextView().getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                    childViewHolder.getDueDateTextView().setPaintFlags((childViewHolder.getDueDateTextView().getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG));
-                } else {
-                    childViewHolder.getTitleTextView().setPaintFlags(childViewHolder.getTitleTextView().getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
-                    childViewHolder.getDescTextView().setPaintFlags(childViewHolder.getDescTextView().getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
-                    childViewHolder.getDueDateTextView().setPaintFlags((childViewHolder.getDueDateTextView().getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG)));
-                }
+                List<TextView> textViews = Arrays.asList(titleTextView, descTextView, dueDateTextView);
+                strikeOut(textViews, task.isCompleted());
+        }
+    }
+
+    // To use strike-out for the text views which it's tasks are completed.
+    private void strikeOut(List<TextView> textViews, boolean strikeout) {
+        for (TextView textView : textViews) {
+            if (textView == null)
+                continue;
+
+            int paintFlag = textView.getPaintFlags();
+            if (strikeout)
+                textView.setPaintFlags(paintFlag| Paint.STRIKE_THRU_TEXT_FLAG);
+            else
+                textView.setPaintFlags(paintFlag & (~Paint.STRIKE_THRU_TEXT_FLAG));
         }
     }
 
     @Override
     public int getItemCount() {
-        return data.size();
+        return data == null ? 0 : data.size();
     }
 
     @Override

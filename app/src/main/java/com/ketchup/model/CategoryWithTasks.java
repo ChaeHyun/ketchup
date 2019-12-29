@@ -24,11 +24,13 @@ public class CategoryWithTasks implements AdapterType {
     )
     public List<Task> tasks;
 
-    public CategoryWithTasks(Category category, List<Task> tasks) {
+    public CategoryWithTasks(Category category, List<Task> tasks, boolean folded) {
         this.category = category;
         this.tasks = tasks;
         if (tasks == null)
             this.tasks = new ArrayList<>();
+
+        this.category.setFolded(folded);
     }
 
     public int getCount() {
