@@ -17,11 +17,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import timber.log.Timber;
 
 public class TaskListViewModelTest {
     @Rule
     public InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
+
+    @Inject
+    AppExecutors appExecutors;
 
     private TaskListViewModel viewModel;
     private FakeTaskRepository repository;
@@ -42,7 +47,7 @@ public class TaskListViewModelTest {
         repository = new FakeTaskRepository(data);
 
         // FakeRepository 를 이용해서 ViewModel 인스턴스를 생성한다.
-        viewModel = new TaskListViewModel(repository);
+        viewModel = new TaskListViewModel(repository, appExecutors);
     }
 
     @After
