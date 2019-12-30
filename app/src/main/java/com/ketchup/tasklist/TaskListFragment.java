@@ -44,7 +44,6 @@ public class TaskListFragment extends DaggerFragment {
 
     private List<Task> cachedTaskList;
     private DateGroup cachedDateGroupFilter = DateGroup.TODAY;
-    private TaskAdapter taskAdapter;
     private EmptyRecyclerView recyclerView;
 
     private TaskAdapterRenewal taskAdapterRenewal;
@@ -160,7 +159,6 @@ public class TaskListFragment extends DaggerFragment {
 
     private void setupEmptyRecyclerView() {
         if (getActivity() != null) {
-            //taskAdapter = new TaskAdapter(NavHostFragment.findNavController(this));
             taskAdapterRenewal = new TaskAdapterRenewal(NavHostFragment.findNavController(this));
 
             // EmptyRecyclerView Init
@@ -169,7 +167,6 @@ public class TaskListFragment extends DaggerFragment {
             recyclerView.setEmptyView(getActivity().findViewById(R.id.fragment_task_list_empty_item));
             recyclerView.setNestedScrollingEnabled(false);
 
-            //recyclerView.setAdapter(taskAdapter);
             recyclerView.setAdapter(taskAdapterRenewal);
         }
     }
@@ -187,7 +184,7 @@ public class TaskListFragment extends DaggerFragment {
     }
 
     private void navigateToAddEditTaskFragment(boolean addMode, String taskId) {
-        Timber.d("[ navigateTo AddEditTaskFragment ] : %s, %s", addMode, taskId);
+        Timber.d("[ navigateToAddEditTaskFragment AddEditTaskFragment ] : %s, %s", addMode, taskId);
         Bundle bundle = new Bundle();
         bundle.putString(AddEditTaskFragment.TASK_ID, taskId);
         navController.navigate(R.id.action_task_list_to_addEditTaskFragment, bundle);
@@ -258,7 +255,6 @@ public class TaskListFragment extends DaggerFragment {
             //listTestPrinting("observerTasks()", list);
 
             cachedTaskList = list;
-            //taskAdapter.setTasks(list);
 
             Category categoryUncom = new Category(UUID.randomUUID().toString(), "미완료");
             Category categoryCom = new Category(UUID.randomUUID().toString(), "완료");

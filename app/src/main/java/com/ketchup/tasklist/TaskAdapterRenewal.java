@@ -1,7 +1,7 @@
 package com.ketchup.tasklist;
 
-import android.content.Context;
 import android.graphics.Paint;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.ketchup.AdapterType;
 import com.ketchup.R;
+import com.ketchup.addedit.AddEditTaskFragment;
 import com.ketchup.model.CategoryWithTasks;
 import com.ketchup.model.task.ItemType;
 import com.ketchup.model.task.Task;
@@ -25,11 +26,9 @@ import java.util.Locale;
 import timber.log.Timber;
 
 
-public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements TaskItemOnClick, HeaderItemOnClick {
 
-    private View view = null;
     private List<AdapterType> data;
-
     private NavController navController;
 
     public TaskAdapterRenewal(NavController navController) {
@@ -39,7 +38,6 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public void setData(List<AdapterType> data) {
-        /* HEADER일때 folded == false이면 Child Item 추가시켜준다. */
         for (int i = 0; i < data.size(); i++) {
             if (data.get(i).getItemType() == ItemType.HEADER) {
                 addChildTasks(data, i);
@@ -64,13 +62,13 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         switch (type) {
             case HEADER:
-                view = LayoutInflater.from(parent.getContext())
+                View view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.header_item, parent, false);
-                return new HeaderViewHolder(view);
+                return new HeaderViewHolder(view, this);
             case CHILD:
                 view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.task_item, parent, false);
-                return new TaskViewHolder(view, navController);
+                return new TaskViewHolder(view, this);
         }
         return null;
     }
@@ -83,41 +81,11 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
             case HEADER:
                 final CategoryWithTasks header = (CategoryWithTasks) item;
                 final HeaderViewHolder headerViewHolder = (HeaderViewHolder) holder;
+                headerViewHolder.header = header;
                 headerViewHolder.headerPosition = item;
                 headerViewHolder.header_title.setText(header.category.getName());
+                headerViewHolder.initHeaderIcon(header.category.isFolded());
 
-                // folded == true -> 접혀있는 상태이다
-                if (header.category.isFolded())
-                    headerViewHolder.header_icon.setImageResource(R.drawable.ic_arrow_drop_down_black_24dp);
-                else
-                    headerViewHolder.header_icon.setImageResource(R.drawable.ic_arrow_drop_up_black_24dp);
-
-                // onClick Listener for the icon  - fold / unfold
-                headerViewHolder.header_icon.setOnClickListener(view -> {
-                    // unfold == expand
-                    if (header.category.isFolded()) {
-                        Timber.d("current state : folded / Action : To unfold the list.");
-                        int pos = data.indexOf(headerViewHolder.headerPosition);
-                        int index = pos + 1;
-                        for (Task task : header.tasks) {
-                            data.add(index++, task);
-                        }
-
-                        notifyItemRangeInserted(pos + 1, header.getCount());
-                        headerViewHolder.header_icon.setImageResource(R.drawable.ic_arrow_drop_up_black_24dp);
-                        header.category.setFolded(false);
-                    }
-                    // fold
-                    else {
-                        Timber.d("current state: unfolded / Action : To fold the list.");
-                        int pos = data.indexOf(headerViewHolder.headerPosition);
-
-                        data.removeAll(header.tasks);
-                        notifyItemRangeRemoved(pos + 1, header.getCount());
-                        headerViewHolder.header_icon.setImageResource(R.drawable.ic_arrow_drop_down_black_24dp);
-                        header.category.setFolded(true);
-                    }
-                });
                 break;
             case CHILD:
                 final Task task = (Task) item;
@@ -167,5 +135,39 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public int getItemViewType(int position) {
         return data.get(position).getItemType().getCode();
+    }
+
+    @Override
+    public void navigateToAddEditTaskFragment(final String taskId) {
+        Bundle bundle = new Bundle();
+        bundle.putString(AddEditTaskFragment.TASK_ID, taskId);
+
+        Timber.d("taskID: [ %s ] is selected.", taskId);
+        navController.navigate(R.id.action_task_list_to_addEditTaskFragment, bundle);
+    }
+
+
+    // 필요한것, Header, data list 내에 header 가 위치한 index
+    // header는 children을 갖고있고 tasks.size도 알고 있다.
+    @Override
+    public void insertChildrenOfHeader(CategoryWithTasks header) {
+        Timber.d("current state : folded / Action : To unfold the list.");
+        int pos = data.indexOf(header);
+        int index = pos + 1;
+        for (Task task : header.tasks)
+            data.add(index++, task);
+
+        notifyItemRangeInserted(pos + 1, header.getCount());
+        header.category.setFolded(false);
+    }
+
+    @Override
+    public void removeChildrenOfHeader(CategoryWithTasks header) {
+        Timber.d("current state: unfolded / Action : To fold the list.");
+        int pos = data.indexOf(header);
+
+        data.removeAll(header.tasks);
+        notifyItemRangeRemoved(pos + 1, header.getCount());
+        header.category.setFolded(true);
     }
 }
