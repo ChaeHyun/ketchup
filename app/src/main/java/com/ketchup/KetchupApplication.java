@@ -7,6 +7,7 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.ketchup.di.DaggerAppComponent;
+import com.ketchup.model.CategoryRepository;
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
 import com.ketchup.worker.DaggerWorkerFactory;
@@ -33,6 +34,9 @@ public class KetchupApplication extends DaggerApplication {
     @Inject
     AppExecutors appExecutors;
 
+    @Inject
+    CategoryRepository categoryRepository;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -48,9 +52,7 @@ public class KetchupApplication extends DaggerApplication {
 
         WorkManager workManager = WorkManager.getInstance(this);
         workManager.enqueueUniquePeriodicWork("DailyWorker", ExistingPeriodicWorkPolicy.KEEP, testPeriodicWorkRequest);
-        workManager.cancelUniqueWork("DailyWorker");
 
-        test();
     }
 
     @Override

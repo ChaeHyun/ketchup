@@ -9,6 +9,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.ketchup.AppExecutors;
 import com.ketchup.model.AppDatabase;
+import com.ketchup.model.CategoryDao;
+import com.ketchup.model.CategoryDataSource;
+import com.ketchup.model.CategoryRepository;
 import com.ketchup.model.task.DummyTask;
 import com.ketchup.model.task.TaskDao;
 import com.ketchup.model.task.TaskDataSource;
@@ -42,6 +45,8 @@ public class RoomModule {
 
         return appDatabase;
     }
+
+    /* About the entity: [Task]  */
 
     @Singleton
     @Provides
@@ -80,5 +85,21 @@ public class RoomModule {
         };
 
         return populateDbCallback;
+    }
+
+    /* About the entity: [Category] */
+
+    @Singleton
+    @Provides
+    public CategoryDao provideCategoryDao(AppDatabase appDatabase) {
+        Timber.v("[ CategoryDao ] is provided. ");
+        return appDatabase.getCategoryDao();
+    }
+
+    @Singleton
+    @Provides
+    public CategoryRepository providesCategoryRepository(CategoryDao categoryDao, AppExecutors appExecutors) {
+        Timber.v("[ CategoryRepository ] is provided.");
+        return new CategoryDataSource(categoryDao, appExecutors);
     }
 }
