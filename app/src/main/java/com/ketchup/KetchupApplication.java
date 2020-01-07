@@ -7,6 +7,7 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.ketchup.di.DaggerAppComponent;
+import com.ketchup.model.Category;
 import com.ketchup.model.CategoryRepository;
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
@@ -53,6 +54,7 @@ public class KetchupApplication extends DaggerApplication {
         WorkManager workManager = WorkManager.getInstance(this);
         workManager.enqueueUniquePeriodicWork("DailyWorker", ExistingPeriodicWorkPolicy.KEEP, testPeriodicWorkRequest);
 
+        testDefaultCategories();
     }
 
     @Override
@@ -78,6 +80,17 @@ public class KetchupApplication extends DaggerApplication {
             Timber.d("The size of TaskList : %d", tasks.size());
 
             throw new RuntimeException("런타임 에러 발생");
+        });
+    }
+
+    private void testDefaultCategories() {
+        appExecutors.diskIO().execute(() -> {
+            List<Category> list = categoryRepository.getAllCategories();
+
+            if (list != null)
+                for (Category c : list)
+                    Timber.d("Check Category : %s, %s, %s, %s", c.getName(), c.getCategoryId(), c.isFolded(), c.getItemType());
+
         });
     }
 }

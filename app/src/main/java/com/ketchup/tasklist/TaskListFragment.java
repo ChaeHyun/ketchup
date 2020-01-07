@@ -21,6 +21,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.ketchup.AdapterType;
 import com.ketchup.addedit.AddEditTaskFragment;
 import com.ketchup.model.Category;
+import com.ketchup.model.CategoryRepository;
+import com.ketchup.model.CategoryTaskCrossRef;
 import com.ketchup.model.CategoryWithTasks;
 import com.ketchup.model.task.DateGroup;
 import com.ketchup.utils.AnchoringFab;
@@ -33,6 +35,7 @@ import com.ketchup.model.task.Task;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -54,6 +57,10 @@ public class TaskListFragment extends DaggerFragment {
     ToolbarController toolbarController;
     @Inject
     ContextCompatUtils contextCompatUtils;
+
+    // for test
+    @Inject
+    CategoryRepository categoryRepository;
 
     private TaskListViewModel taskListViewModel;
     private NavController navController;
@@ -131,6 +138,16 @@ public class TaskListFragment extends DaggerFragment {
             Timber.i("전송받은 ADD_MODE 값 : %s", getArguments().getBoolean(ADD_MODE));
             Timber.i("전송받은 NEW_TASK_ID 값 : %s", getArguments().getString(NEW_TASK_ID));
         }
+
+        // Test
+        Timber.d(" Relation 값 확인");
+        Executors.newSingleThreadExecutor().execute(() -> {
+            List<CategoryTaskCrossRef> list = categoryRepository.getAllRelation();
+            if (list != null) {
+                for (CategoryTaskCrossRef data : list)
+                    Timber.d(" -> Relation<cateId , taskId> : %s, %s", data.categoryId, data.taskId);
+            }
+        });
 
         navController = NavHostFragment.findNavController(this);
         navController.addOnDestinationChangedListener(destinationChangedListener);

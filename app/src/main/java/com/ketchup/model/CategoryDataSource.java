@@ -17,9 +17,12 @@ public class CategoryDataSource implements CategoryRepository {
     private ExecutorService diskIO;
     private CategoryDao dao;
 
-    public CategoryDataSource(CategoryDao categoryDao, AppExecutors appExecutors) {
+    private CategoryTaskDao relationDao;
+
+    public CategoryDataSource(CategoryDao categoryDao, CategoryTaskDao relationDao, AppExecutors appExecutors) {
         Timber.v("Constructor[CategoryDataSource] : CategoryDao is provided to CategoryDataSource");
         this.dao = categoryDao;
+        this.relationDao = relationDao;
         this.appExecutors = appExecutors;
         this.diskIO = appExecutors.diskIO();
     }
@@ -70,5 +73,33 @@ public class CategoryDataSource implements CategoryRepository {
     @Override
     public void deleteAllCategories() {
         diskIO.execute(() -> dao.deleteAllCategories());
+    }
+
+    @Override
+    public String getCategoryId(String name) {
+        return dao.getCategoryId(name);
+    }
+
+    /* Below here, Relation */
+
+    @Override
+    public void createRelationWithTask(String categoryName, String taskId) {
+        String categoryId = getCategoryId(categoryName);
+
+        relationDao.insertCategoryTaskRelation(new CategoryTaskCrossRef(categoryId, taskId));
+    }
+
+    @Override
+    public void updateRelationWithTask(String oldCategoryName, String newCategoryName, String taskId) {
+        String categoryId = getCategoryId(oldCategoryName);
+        relationDao.deleteCateogryTaskRelation(categoryId, taskId);
+
+        categoryId = getCategoryId(newCategoryName);
+        relationDao.insertCategoryTaskRelation(new CategoryTaskCrossRef(categoryId, taskId));
+    }
+
+    @Override
+    public List<CategoryTaskCrossRef> getAllRelation() {
+        return relationDao.readAllCategoryTaskRelation();
     }
 }

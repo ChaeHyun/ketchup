@@ -9,14 +9,19 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.ketchup.AppExecutors;
 import com.ketchup.model.AppDatabase;
+import com.ketchup.model.Category;
 import com.ketchup.model.CategoryDao;
 import com.ketchup.model.CategoryDataSource;
 import com.ketchup.model.CategoryRepository;
+import com.ketchup.model.CategoryTaskDao;
 import com.ketchup.model.task.DummyTask;
 import com.ketchup.model.task.TaskDao;
 import com.ketchup.model.task.TaskDataSource;
 import com.ketchup.model.task.TaskRepository;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
@@ -41,6 +46,7 @@ public class RoomModule {
         appDatabase = Room.databaseBuilder(context, AppDatabase.class, DB_NAME)
                 .fallbackToDestructiveMigration()
                 //.addCallback(populateDummyData())
+                .addCallback(addDefaultCategoriesAtCreation())
                 .build();
 
         return appDatabase;
@@ -98,8 +104,36 @@ public class RoomModule {
 
     @Singleton
     @Provides
-    public CategoryRepository providesCategoryRepository(CategoryDao categoryDao, AppExecutors appExecutors) {
+    public CategoryRepository providesCategoryRepository(CategoryDao categoryDao, CategoryTaskDao relationDao, AppExecutors appExecutors) {
         Timber.v("[ CategoryRepository ] is provided.");
-        return new CategoryDataSource(categoryDao, appExecutors);
+        return new CategoryDataSource(categoryDao, relationDao, appExecutors);
+    }
+
+    private RoomDatabase.Callback addDefaultCategoriesAtCreation() {
+        Timber.v("[ Add Default Categories ]");
+        RoomDatabase.Callback callbackAddCategories = new RoomDatabase.Callback() {
+            @Override
+            public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                super.onCreate(db);
+                Timber.v("[ ROOM.Callback : This should be run only once at DB creation. ]");
+
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    Category categoryUncompleted = new Category(UUID.randomUUID().toString(), "uncompleted");
+                    Category categoryCompleted = new Category(UUID.randomUUID().toString(), "completed");
+
+                    List<Category> defaultCategories = Arrays.asList(categoryUncompleted, categoryCompleted);
+                    getAppDatabaseInstance().getCategoryDao().insertAllCategory(defaultCategories);
+                });
+            }
+        };
+
+        return callbackAddCategories;
+    }
+
+    /* About the entity: [CategoryTaskCrossRef] */
+    @Singleton
+    @Provides
+    public CategoryTaskDao provideCategoryTaskDao(AppDatabase appDatabase) {
+        return appDatabase.getCategoryTaskDao();
     }
 }

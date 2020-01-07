@@ -42,5 +42,8 @@ public interface CategoryDao {
     @Query("DELETE FROM category WHERE categoryId = :categoryId")
     void deleteCategory(@NonNull final String categoryId);
 
+    // get Id by using Name
+    @Query("SELECT categoryId FROM category WHERE name = :name")
+    String getCategoryId(String name);
 
 }

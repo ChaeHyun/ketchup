@@ -22,4 +22,11 @@ public interface CategoryRepository {
     void deleteCategory(UUID uuid);
     void deleteAllCategories();
 
+    String getCategoryId(String name);
+
+    void createRelationWithTask(String categoryName, String taskId);
+
+    void updateRelationWithTask(String oldCategoryName, String newCategoryName, String taskId);
+
+    List<CategoryTaskCrossRef> getAllRelation();
 }
