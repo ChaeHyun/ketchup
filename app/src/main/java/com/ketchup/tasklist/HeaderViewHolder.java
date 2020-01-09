@@ -40,6 +40,9 @@ public class HeaderViewHolder extends RecyclerView.ViewHolder {
     }
 
     public void initHeaderIcon(boolean folded) {
+        if (header.getCount() == 0)
+            header_icon.setImageResource(R.drawable.ic_arrow_drop_down_black_24dp);
+
         if (folded)
             header_icon.setImageResource(R.drawable.ic_arrow_drop_down_black_24dp);
         else

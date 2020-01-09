@@ -26,7 +26,7 @@ public interface CategoryTaskDao {
     void deleteCategoryTaskRelation(CategoryTaskCrossRef categoryTaskCrossRef);
 
     @Query("DELETE FROM categorytaskcrossref WHERE categoryId = :categoryId AND taskId = :taskId")
-    void deleteCateogryTaskRelation(String categoryId, String taskId);
+    void deleteCategoryTaskRelation(String categoryId, String taskId);
 
 
 }

@@ -27,7 +27,12 @@ public class TaskListViewModelTest {
 
     @Inject
     AppExecutors appExecutors;
+    /**
+     * [ Operations with LiveData<Task> are deleted in TaskListViewModel.
+     Now, it is using CategoryWithTasks type. ]
+     */
 
+/*
     private TaskListViewModel viewModel;
     private FakeTaskRepository repository;
     private Task newTask = new Task(UUID.randomUUID().toString(), "Newly added Task");
@@ -260,5 +265,5 @@ public class TaskListViewModelTest {
             e.printStackTrace();
         }
     }
-
+*/
 }

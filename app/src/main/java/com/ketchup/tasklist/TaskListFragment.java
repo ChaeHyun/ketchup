@@ -22,7 +22,6 @@ import com.ketchup.AdapterType;
 import com.ketchup.addedit.AddEditTaskFragment;
 import com.ketchup.model.Category;
 import com.ketchup.model.CategoryRepository;
-import com.ketchup.model.CategoryTaskCrossRef;
 import com.ketchup.model.CategoryWithTasks;
 import com.ketchup.model.task.DateGroup;
 import com.ketchup.utils.AnchoringFab;
@@ -33,6 +32,7 @@ import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -82,12 +82,9 @@ public class TaskListFragment extends DaggerFragment {
         Timber.d("[ onCreate() ]");
         taskListViewModel = ViewModelProviders.of(this, viewModelFactory).get(TaskListViewModel.class);
 
-        if (taskListViewModel.getTasks().getValue() != null)
-            cachedTaskList = taskListViewModel.getTasks().getValue();
-
         observeFilter();
         observeLoading();
-        observeTasks();
+        observeProcessedTasks();
     }
 
     @Override
@@ -139,15 +136,6 @@ public class TaskListFragment extends DaggerFragment {
             Timber.i("전송받은 NEW_TASK_ID 값 : %s", getArguments().getString(NEW_TASK_ID));
         }
 
-        // Test
-        Timber.d(" Relation 값 확인");
-        Executors.newSingleThreadExecutor().execute(() -> {
-            List<CategoryTaskCrossRef> list = categoryRepository.getAllRelation();
-            if (list != null) {
-                for (CategoryTaskCrossRef data : list)
-                    Timber.d(" -> Relation<cateId , taskId> : %s, %s", data.categoryId, data.taskId);
-            }
-        });
 
         navController = NavHostFragment.findNavController(this);
         navController.addOnDestinationChangedListener(destinationChangedListener);
@@ -242,9 +230,11 @@ public class TaskListFragment extends DaggerFragment {
                 break;
             case ALL:
                 toolbarController.setTitle("모두 보기");
-                taskListViewModel.loadTasks();
+                //taskListViewModel.loadTasks();
+                taskListViewModel.loadAllCategoryWithTasks();
                 return;
         }
+
         taskListViewModel.loadTasksInCertainPeriod(dateGroup);
     }
 
@@ -261,62 +251,17 @@ public class TaskListFragment extends DaggerFragment {
         });
     }
 
-    // 현재 DB에서 데이터를 꺼내오는 형태는 List<Task> 이다.
-    // 업데이트하고 싶은 데이터 형태는 List<CategoryWithTasks>이다.
-    // DB에서 List<CategoryWithTasks로 데이터를 꺼내기 위해서는 사전 작업이 필요하다.
-    // 우선 현재 받아온 List<Task> 수작업으로 List<CategoryWithTasks>로 바꾸는 작업을 해보자.
 
-    private void observeTasks() {
-        taskListViewModel.getTasks().observe(this, list -> {
-            Timber.d("[ Observer in TaskListFragment for List<Task>]");
-            //listTestPrinting("observerTasks()", list);
+    private void observeProcessedTasks() {
+        taskListViewModel.getProcessedTasks().observe(this, list -> {
+            Timber.d(" [ Observer in TaskListFragment for List<CategoryWithTasks> ]");
+            if (list == null)
+                return;
 
-            cachedTaskList = list;
+            List<AdapterType> adapterData = new ArrayList<>();
+            adapterData.addAll(list);
 
-            Category categoryUncom = new Category(UUID.randomUUID().toString(), "미완료");
-            Category categoryCom = new Category(UUID.randomUUID().toString(), "완료");
-
-            List<Task> uncompletedTaskList = filterCompleted(list, false);
-            List<Task> completedTaskList = filterCompleted(list, true);
-
-            CategoryWithTasks categoryWithTasksUncom = new CategoryWithTasks(categoryUncom, uncompletedTaskList, false);
-            CategoryWithTasks categoryWithTasksCom = new CategoryWithTasks(categoryCom, completedTaskList, true);
-
-            List<AdapterType> data = new ArrayList<>();
-            data.add(categoryWithTasksUncom);
-            data.add(categoryWithTasksCom);
-            // 확인
-            print(categoryWithTasksUncom);
-            print(categoryWithTasksCom);
-            taskAdapterRenewal.setData(data);
+            taskAdapterRenewal.setData(adapterData);
         });
-    }
-
-    private void print(CategoryWithTasks input) {
-        String title = input.category.getName();
-        Timber.d("[ %s, %s , %s]", title, input.getItemType(), input.category.isFolded());
-        for (Task t : input.tasks) {
-            Timber.d("  (%s, %s, %s)", t.getTitle(), t.isCompleted(), t.getItemType());
-        }
-    }
-
-    private List<Task> filterCompleted(List<Task> input, boolean complete) {
-        List<Task> result = new ArrayList<>();
-        for (Task task : input) {
-            if (task.isCompleted() == complete)
-                result.add(task);
-        }
-
-        return result;
-    }
-
-    private void listTestPrinting(String title, List<Task> list) {
-        // cachedTask 출력
-        Timber.d("[ cachedTask 출력 ] : %s", title);
-        if (list != null) {
-            for (int i = 0; i < list.size(); i++) {
-                Timber.d("%d : %s", i, list.get(i).getTitle());
-            }
-        }
     }
 }

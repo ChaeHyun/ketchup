@@ -1,5 +1,6 @@
 package com.ketchup.model;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,9 +25,15 @@ public interface CategoryRepository {
 
     String getCategoryId(String name);
 
-    void createRelationWithTask(String categoryName, String taskId);
+    void createRelationWithTask(String categoryName, String taskId, Date dueDate);
 
-    void updateRelationWithTask(String oldCategoryName, String newCategoryName, String taskId);
+    void updateRelationWithTask(String oldCategoryName, String newCategoryName, String taskId, Date dueDate);
 
     List<CategoryTaskCrossRef> getAllRelation();
+
+    List<CategoryWithTasks> getAllCategoryWithTasksData();
+
+    List<CategoryWithTasks> testCategoryWithTasksWithDate();
+
+    List<CategoryWithTasks> test(String name);
 }

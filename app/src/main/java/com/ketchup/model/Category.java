@@ -16,6 +16,7 @@ public class Category implements AdapterType {
     private String categoryId;
 
     private String name;
+    // This is supposed to be at CategoryWithTasks.
     private boolean folded = false;
 
     @TypeConverters(ItemType.class)

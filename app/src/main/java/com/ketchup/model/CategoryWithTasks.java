@@ -18,11 +18,17 @@ public class CategoryWithTasks implements AdapterType {
             parentColumn="categoryId",
             entity = Task.class,
             entityColumn = "uuid",
-            associateBy = @Junction(value = CategoryTaskCrossRef.class,
+            associateBy = @Junction(
+                value = CategoryTaskCrossRef.class,
                 parentColumn = "categoryId",
                 entityColumn = "taskId")
     )
     public List<Task> tasks;
+
+    public CategoryWithTasks(Category category, List<Task> tasks) {
+        this.category = category;
+        this.tasks = tasks;
+    }
 
     public CategoryWithTasks(Category category, List<Task> tasks, boolean folded) {
         this.category = category;

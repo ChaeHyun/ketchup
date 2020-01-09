@@ -1,7 +1,5 @@
 package com.ketchup.addedit;
 
-import android.widget.Toast;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -14,15 +12,12 @@ import com.ketchup.model.task.TaskRepository;
 import com.ketchup.utils.AlarmUtils;
 import com.ketchup.utils.DateManipulator;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -186,10 +181,6 @@ public class AddEditTaskViewModel extends ViewModel {
 
     // Called by fab.onClick()
     public void saveTask() {
-        // 저장 버튼 클릭 했을 때, 카테고리 아이디 값 읽어올 수 있는지 확인해보기.
-        //getCategoryData("uncompleted");
-        //getCategoryData("completed");
-
         // View에 입력된 값을 Task Obj로 묶는 로직
         String title = _title.getValue();
         if (title == null || title.length() <= 0) {
@@ -215,7 +206,7 @@ public class AddEditTaskViewModel extends ViewModel {
 
         // add Relation Junction b/w Category and Task
         appExecutors.diskIO().execute(() -> {
-            makeRelationship(isAddMode, taskId, completed);
+            connectCategoryTaskJunction(isAddMode, taskId, dueDate, completed);
         });
 
         if (dueDate != null && !completed) {
@@ -237,12 +228,6 @@ public class AddEditTaskViewModel extends ViewModel {
             alarmUtils.cancelAlarm(taskId);
         }
 
-//        for (String categoryId : result) {
-//            Timber.d("category Id 체크 : %s", categoryId);
-//        }
-        for (String key : categoryMap.keySet()) {
-            Timber.d("category key,val 체크 : %s, %s",key, categoryMap.get(key));
-        }
         _saved.postValue(AddEditTaskFragment.SAVED_OK);
     }
 
@@ -275,20 +260,19 @@ public class AddEditTaskViewModel extends ViewModel {
         _saved.postValue(AddEditTaskFragment.SAVED_OK);     // The role of terminating AddEditTaskFragment
     }
 
-    private void makeRelationship(boolean addMode, String taskId, boolean completed) {
+    private void connectCategoryTaskJunction(boolean addMode, String taskId, Date dueDate, boolean completed) {
         Timber.d("관계 연결하기 메소드");
         String categoryName = completed ? "completed" : "uncompleted";
 
         if (addMode) {
-            categoryRepository.createRelationWithTask(categoryName, taskId);
+            categoryRepository.createRelationWithTask(categoryName, taskId, dueDate);
         }
         // EditMode - Need to check whether completed is changed or not.
         else {
             if (completed)
-                categoryRepository.updateRelationWithTask("uncompleted", categoryName, taskId);
+                categoryRepository.updateRelationWithTask("uncompleted", categoryName, taskId, dueDate);
             else
-                categoryRepository.updateRelationWithTask("completed", categoryName, taskId);
+                categoryRepository.updateRelationWithTask("completed", categoryName, taskId, dueDate);
         }
-
     }
 }

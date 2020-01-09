@@ -7,14 +7,9 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.ketchup.di.DaggerAppComponent;
-import com.ketchup.model.Category;
-import com.ketchup.model.CategoryRepository;
-import com.ketchup.model.task.Task;
-import com.ketchup.model.task.TaskRepository;
 import com.ketchup.worker.DaggerWorkerFactory;
 import com.ketchup.worker.DailyAlarmRegisterWorker;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -28,15 +23,6 @@ public class KetchupApplication extends DaggerApplication {
 
     @Inject
     DaggerWorkerFactory factory;
-
-    @Inject
-    TaskRepository taskRepository;
-
-    @Inject
-    AppExecutors appExecutors;
-
-    @Inject
-    CategoryRepository categoryRepository;
 
     @Override
     public void onCreate() {
@@ -54,7 +40,7 @@ public class KetchupApplication extends DaggerApplication {
         WorkManager workManager = WorkManager.getInstance(this);
         workManager.enqueueUniquePeriodicWork("DailyWorker", ExistingPeriodicWorkPolicy.KEEP, testPeriodicWorkRequest);
 
-        testDefaultCategories();
+        //testDefaultCategories();
     }
 
     @Override
@@ -71,26 +57,5 @@ public class KetchupApplication extends DaggerApplication {
                 .build();
 
         WorkManager.initialize(this, config);
-    }
-
-    private void test() {
-        appExecutors.diskIO().execute(() -> {
-            List<Task> tasks = taskRepository.getAllTasks();
-
-            Timber.d("The size of TaskList : %d", tasks.size());
-
-            throw new RuntimeException("런타임 에러 발생");
-        });
-    }
-
-    private void testDefaultCategories() {
-        appExecutors.diskIO().execute(() -> {
-            List<Category> list = categoryRepository.getAllCategories();
-
-            if (list != null)
-                for (Category c : list)
-                    Timber.d("Check Category : %s, %s, %s, %s", c.getName(), c.getCategoryId(), c.isFolded(), c.getItemType());
-
-        });
     }
 }

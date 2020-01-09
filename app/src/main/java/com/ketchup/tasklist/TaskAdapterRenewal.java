@@ -49,6 +49,9 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     private void addChildTasks(final List<AdapterType> data, int pos) {
         CategoryWithTasks header = (CategoryWithTasks) data.get(pos);
+        if (header.getCount() == 0)
+            return;
+
         Timber.d("HEADER : %s", header.category.isFolded());
         if (!header.category.isFolded()) {
             data.addAll(pos+1, header.tasks);

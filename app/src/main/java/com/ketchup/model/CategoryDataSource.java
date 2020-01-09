@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.ketchup.AppExecutors;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -80,26 +81,44 @@ public class CategoryDataSource implements CategoryRepository {
         return dao.getCategoryId(name);
     }
 
+
     /* Below here, Relation */
 
     @Override
-    public void createRelationWithTask(String categoryName, String taskId) {
+    public void createRelationWithTask(String categoryName, String taskId, Date dueDate) {
         String categoryId = getCategoryId(categoryName);
 
-        relationDao.insertCategoryTaskRelation(new CategoryTaskCrossRef(categoryId, taskId));
+        relationDao.insertCategoryTaskRelation(new CategoryTaskCrossRef(categoryId, taskId, dueDate));
     }
 
     @Override
-    public void updateRelationWithTask(String oldCategoryName, String newCategoryName, String taskId) {
+    public void updateRelationWithTask(String oldCategoryName, String newCategoryName, String taskId, Date dueDate) {
         String categoryId = getCategoryId(oldCategoryName);
-        relationDao.deleteCateogryTaskRelation(categoryId, taskId);
+        relationDao.deleteCategoryTaskRelation(categoryId, taskId);
 
         categoryId = getCategoryId(newCategoryName);
-        relationDao.insertCategoryTaskRelation(new CategoryTaskCrossRef(categoryId, taskId));
+        relationDao.insertCategoryTaskRelation(new CategoryTaskCrossRef(categoryId, taskId, dueDate));
     }
 
     @Override
     public List<CategoryTaskCrossRef> getAllRelation() {
         return relationDao.readAllCategoryTaskRelation();
+    }
+
+
+    /* CategoryWithTasks Types */
+    @Override
+    public List<CategoryWithTasks> getAllCategoryWithTasksData() {
+        return dao.getAllCategoryWithTasks();
+    }
+
+    @Override
+    public List<CategoryWithTasks> testCategoryWithTasksWithDate() {
+        return dao.getCategoryWithTasksWithSpecificDate();
+    }
+
+    @Override
+    public List<CategoryWithTasks> test(String name) {
+        return dao.test(name);
     }
 }

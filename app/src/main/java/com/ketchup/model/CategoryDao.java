@@ -5,6 +5,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import androidx.room.Update;
 
 import java.util.List;
@@ -45,5 +46,27 @@ public interface CategoryDao {
     // get Id by using Name
     @Query("SELECT categoryId FROM category WHERE name = :name")
     String getCategoryId(String name);
+
+    // CategoryWithTasks
+    @Transaction
+    @Query("SELECT * FROM category")
+    List<CategoryWithTasks> getAllCategoryWithTasks();
+
+
+    // WHERE 이 속한 카테고리가 전부 반환된다.
+    @Transaction
+    @Query("SELECT * FROM category " +
+            "INNER JOIN categorytaskcrossref " +
+            "ON category.categoryId = categorytaskcrossref.categoryId " +
+            "WHERE categorytaskcrossref.dueDate IS NOT NULL"
+    )
+    List<CategoryWithTasks> getCategoryWithTasksWithSpecificDate();
+
+    @Query("SELECT * FROM category WHERE category.name = :categoryName OR category.name = 'uncompleted'")
+    List<CategoryWithTasks> test(String categoryName);
+
+
+
+
 
 }
