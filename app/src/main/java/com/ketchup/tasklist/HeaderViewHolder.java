@@ -2,6 +2,7 @@ package com.ketchup.tasklist;
 
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,7 @@ public class HeaderViewHolder extends RecyclerView.ViewHolder {
     public TextView header_title;
     public ImageView header_icon;
     public AdapterType headerPosition;
+    public LinearLayout linearLayout;
 
 
     public CategoryWithTasks header;
@@ -25,11 +27,12 @@ public class HeaderViewHolder extends RecyclerView.ViewHolder {
     public HeaderViewHolder(@NonNull View itemView, HeaderItemOnClick headerItemOnClick) {
         super(itemView);
 
+        linearLayout = itemView.findViewById(R.id.linear_layout_viewholder_header);
         header_title = itemView.findViewById(R.id.header_title);
         header_icon = itemView.findViewById(R.id.header_icon);
         this.headerItemOnClick = headerItemOnClick;
 
-        header_icon.setOnClickListener(v -> {
+        linearLayout.setOnClickListener(v -> {
             if (header.category.isFolded())
                 this.headerItemOnClick.insertChildrenOfHeader(header);
             else
