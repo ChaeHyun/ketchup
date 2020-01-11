@@ -87,4 +87,8 @@ public class ContextCompatUtils {
     public Drawable getDrawable(int drawableId) {
         return ContextCompat.getDrawable(context, drawableId);
     }
+
+    public String getStringResource(int resourceId) {
+        return context.getString(resourceId);
+    }
 }

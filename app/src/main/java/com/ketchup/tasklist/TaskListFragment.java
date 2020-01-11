@@ -20,9 +20,7 @@ import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.ketchup.AdapterType;
 import com.ketchup.addedit.AddEditTaskFragment;
-import com.ketchup.model.Category;
 import com.ketchup.model.CategoryRepository;
-import com.ketchup.model.CategoryWithTasks;
 import com.ketchup.model.task.DateGroup;
 import com.ketchup.utils.AnchoringFab;
 import com.ketchup.utils.ContextCompatUtils;
@@ -32,10 +30,7 @@ import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -164,7 +159,7 @@ public class TaskListFragment extends DaggerFragment {
 
     private void setupEmptyRecyclerView() {
         if (getActivity() != null) {
-            taskAdapterRenewal = new TaskAdapterRenewal(NavHostFragment.findNavController(this));
+            taskAdapterRenewal = new TaskAdapterRenewal(this);
 
             // EmptyRecyclerView Init
             recyclerView = getActivity().findViewById(R.id.fragment_task_list_recycler_view);

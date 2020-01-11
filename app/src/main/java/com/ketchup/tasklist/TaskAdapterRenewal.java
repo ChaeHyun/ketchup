@@ -8,7 +8,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ketchup.AdapterType;
@@ -30,11 +32,13 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     private List<AdapterType> data;
     private NavController navController;
+    private View rootView;
 
-    public TaskAdapterRenewal(NavController navController) {
+    public TaskAdapterRenewal(Fragment fragment) {
         super();
         //this.data = data;
-        this.navController = navController;
+        this.navController = NavHostFragment.findNavController(fragment);
+        this.rootView = fragment.getView();
     }
 
     public void setData(List<AdapterType> data) {
@@ -52,8 +56,8 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
         if (header.getCount() == 0)
             return;
 
-        Timber.d("HEADER : %s", header.category.isFolded());
-        if (!header.category.isFolded()) {
+        Timber.d("HEADER : %s", header.isFolded());
+        if (!header.isFolded()) {
             data.addAll(pos+1, header.tasks);
         }
     }
@@ -67,7 +71,7 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
             case HEADER:
                 View view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.header_item, parent, false);
-                return new HeaderViewHolder(view, this);
+                return new HeaderViewHolder(view, rootView, this);
             case CHILD:
                 view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.task_item, parent, false);
@@ -87,7 +91,7 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
                 headerViewHolder.header = header;
                 headerViewHolder.headerPosition = item;
                 headerViewHolder.header_title.setText(header.category.getName());
-                headerViewHolder.initHeaderIcon(header.category.isFolded());
+                headerViewHolder.initHeaderIcon(header.isFolded());
 
                 break;
             case CHILD:
@@ -161,7 +165,7 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
             data.add(index++, task);
 
         notifyItemRangeInserted(pos + 1, header.getCount());
-        header.category.setFolded(false);
+        header.setFolded(false);
     }
 
     @Override
@@ -171,6 +175,6 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         data.removeAll(header.tasks);
         notifyItemRangeRemoved(pos + 1, header.getCount());
-        header.category.setFolded(true);
+        header.setFolded(true);
     }
 }

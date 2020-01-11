@@ -1,16 +1,20 @@
 package com.ketchup.tasklist;
 
+
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.ketchup.AdapterType;
 import com.ketchup.R;
 import com.ketchup.model.CategoryWithTasks;
+
 
 
 public class HeaderViewHolder extends RecyclerView.ViewHolder {
@@ -19,12 +23,11 @@ public class HeaderViewHolder extends RecyclerView.ViewHolder {
     public AdapterType headerPosition;
     public LinearLayout linearLayout;
 
-
     public CategoryWithTasks header;
 
     private HeaderItemOnClick headerItemOnClick;
 
-    public HeaderViewHolder(@NonNull View itemView, HeaderItemOnClick headerItemOnClick) {
+    public HeaderViewHolder(@NonNull View itemView, View rootView, HeaderItemOnClick headerItemOnClick) {
         super(itemView);
 
         linearLayout = itemView.findViewById(R.id.linear_layout_viewholder_header);
@@ -33,19 +36,21 @@ public class HeaderViewHolder extends RecyclerView.ViewHolder {
         this.headerItemOnClick = headerItemOnClick;
 
         linearLayout.setOnClickListener(v -> {
-            if (header.category.isFolded())
+            if (header.getCount() == 0) {
+                Snackbar.make(rootView, "No Items", Snackbar.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (header.isFolded())
                 this.headerItemOnClick.insertChildrenOfHeader(header);
             else
                 this.headerItemOnClick.removeChildrenOfHeader(header);
 
-            initHeaderIcon(header.category.isFolded());
+            initHeaderIcon(header.isFolded());
         });
     }
 
     public void initHeaderIcon(boolean folded) {
-        if (header.getCount() == 0)
-            header_icon.setImageResource(R.drawable.ic_arrow_drop_down_black_24dp);
-
         if (folded)
             header_icon.setImageResource(R.drawable.ic_arrow_drop_down_black_24dp);
         else

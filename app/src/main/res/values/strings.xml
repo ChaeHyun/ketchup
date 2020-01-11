@@ -40,4 +40,7 @@
     <string name="noti_action_delete">삭제</string>
     <string name="noti_action_complete">완료</string>
     <string name="noti_action_snooze">미루기</string>
+
+    <string name="header_name_completed">완료</string>
+    <string name="header_name_uncompleted">미완료</string>
 </resources>

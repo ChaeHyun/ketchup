@@ -1,11 +1,14 @@
 package com.ketchup.tasklist;
 
 
+import android.app.Application;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.ketchup.AppExecutors;
+import com.ketchup.R;
 import com.ketchup.di.ActivityScope;
 import com.ketchup.model.Category;
 import com.ketchup.model.CategoryRepository;
@@ -13,6 +16,7 @@ import com.ketchup.model.CategoryWithTasks;
 import com.ketchup.model.task.DateGroup;
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
+import com.ketchup.utils.ContextCompatUtils;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -50,6 +54,9 @@ public class TaskListViewModel extends ViewModel {
 
     @Inject
     CategoryRepository categoryRepository;
+
+    @Inject
+    ContextCompatUtils contextCompatUtils;
 
     @Inject
     public TaskListViewModel(TaskRepository taskRepository, AppExecutors appExecutors) {
@@ -93,7 +100,9 @@ public class TaskListViewModel extends ViewModel {
     }
 
     private CategoryWithTasks wrapTaskListWithCategory(final List<Task> data, final boolean completed) {
-        String categoryName = completed ? "완료" : "미완료";
+        String categoryCompleted = contextCompatUtils.getStringResource(R.string.header_name_completed);
+        String categoryUncompleted = contextCompatUtils.getStringResource(R.string.header_name_uncompleted);
+        String categoryName = completed ? categoryCompleted : categoryUncompleted;
         Category category = new Category(UUID.randomUUID().toString(), categoryName);
 
         List<Task> taskList = new ArrayList<>();
@@ -103,6 +112,6 @@ public class TaskListViewModel extends ViewModel {
                 taskList.add(t);
         }
 
-        return new CategoryWithTasks(category, taskList, false);
+        return new CategoryWithTasks(category, taskList);
     }
 }

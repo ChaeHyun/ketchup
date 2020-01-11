@@ -1,6 +1,7 @@
 package com.ketchup.model;
 
 import androidx.room.Embedded;
+import androidx.room.Ignore;
 import androidx.room.Junction;
 import androidx.room.Relation;
 
@@ -24,23 +25,35 @@ public class CategoryWithTasks implements AdapterType {
                 entityColumn = "taskId")
     )
     public List<Task> tasks;
+    @Ignore
+    private boolean folded;
 
     public CategoryWithTasks(Category category, List<Task> tasks) {
         this.category = category;
         this.tasks = tasks;
+        this.folded = (getCount() == 0);
     }
 
+    @Ignore
     public CategoryWithTasks(Category category, List<Task> tasks, boolean folded) {
         this.category = category;
         this.tasks = tasks;
         if (tasks == null)
             this.tasks = new ArrayList<>();
 
-        this.category.setFolded(folded);
+        this.folded = folded;
+    }
+
+    public boolean isFolded() {
+        return folded;
+    }
+
+    public void setFolded(boolean folded) {
+        this.folded = folded;
     }
 
     public int getCount() {
-        return tasks.size();
+        return (tasks == null) ? 0 : tasks.size();
     }
     @Override
     public ItemType getItemType() {

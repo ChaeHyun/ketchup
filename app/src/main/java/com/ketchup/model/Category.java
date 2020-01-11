@@ -17,7 +17,7 @@ public class Category implements AdapterType {
 
     private String name;
     // This is supposed to be at CategoryWithTasks.
-    private boolean folded = false;
+    //private boolean folded = false;
 
     @TypeConverters(ItemType.class)
     private ItemType itemType = ItemType.HEADER;
@@ -43,13 +43,6 @@ public class Category implements AdapterType {
         this.name = name;
     }
 
-    public boolean isFolded() {
-        return folded;
-    }
-
-    public void setFolded(boolean folded) {
-        this.folded = folded;
-    }
 
     public void setItemType(ItemType itemType) {
         this.itemType = itemType;
@@ -59,8 +52,5 @@ public class Category implements AdapterType {
     public ItemType getItemType() {
         return itemType;
     }
-    /*
-    * 카테고리에 필요한 메소드
-    * 일단 생성자(카테고리 아이디, 이름)
-    * */
+
 }

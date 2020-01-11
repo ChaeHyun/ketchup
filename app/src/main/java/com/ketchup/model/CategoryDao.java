@@ -62,6 +62,7 @@ public interface CategoryDao {
     )
     List<CategoryWithTasks> getCategoryWithTasksWithSpecificDate();
 
+    @Transaction
     @Query("SELECT * FROM category WHERE category.name = :categoryName OR category.name = 'uncompleted'")
     List<CategoryWithTasks> test(String categoryName);
 
