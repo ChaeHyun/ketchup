@@ -9,11 +9,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.ketchup.AppExecutors;
 import com.ketchup.model.AppDatabase;
-import com.ketchup.model.Category;
-import com.ketchup.model.CategoryDao;
-import com.ketchup.model.CategoryDataSource;
-import com.ketchup.model.CategoryRepository;
-import com.ketchup.model.CategoryTaskDao;
+import com.ketchup.model.category.Category;
+import com.ketchup.model.category.CategoryDao;
+import com.ketchup.model.category.CategoryDataSource;
+import com.ketchup.model.category.CategoryRepository;
+import com.ketchup.model.category.CategoryTaskDao;
 import com.ketchup.model.task.DummyTask;
 import com.ketchup.model.task.TaskDao;
 import com.ketchup.model.task.TaskDataSource;
@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import dagger.Module;

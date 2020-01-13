@@ -20,7 +20,7 @@ import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.ketchup.AdapterType;
 import com.ketchup.addedit.AddEditTaskFragment;
-import com.ketchup.model.CategoryRepository;
+import com.ketchup.model.category.CategoryRepository;
 import com.ketchup.model.task.DateGroup;
 import com.ketchup.utils.AnchoringFab;
 import com.ketchup.utils.ContextCompatUtils;
@@ -250,8 +250,11 @@ public class TaskListFragment extends DaggerFragment {
     private void observeProcessedTasks() {
         taskListViewModel.getProcessedTasks().observe(this, list -> {
             Timber.d(" [ Observer in TaskListFragment for List<CategoryWithTasks> ]");
-            if (list == null)
+            if (list == null) {
+                Timber.d("어댑터에 표현할 데이터가 없다. -> EmptyRecyclerView 가 보여져야한다.");
+                taskAdapterRenewal.setData(null);
                 return;
+            }
 
             List<AdapterType> adapterData = new ArrayList<>();
             adapterData.addAll(list);

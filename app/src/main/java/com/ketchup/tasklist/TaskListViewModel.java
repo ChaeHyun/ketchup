@@ -1,8 +1,6 @@
 package com.ketchup.tasklist;
 
 
-import android.app.Application;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -10,26 +8,19 @@ import androidx.lifecycle.ViewModel;
 import com.ketchup.AppExecutors;
 import com.ketchup.R;
 import com.ketchup.di.ActivityScope;
-import com.ketchup.model.Category;
-import com.ketchup.model.CategoryRepository;
-import com.ketchup.model.CategoryWithTasks;
+import com.ketchup.model.category.Category;
+import com.ketchup.model.category.CategoryRepository;
+import com.ketchup.model.category.CategoryWithTasks;
 import com.ketchup.model.task.DateGroup;
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
 import com.ketchup.utils.ContextCompatUtils;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.inject.Inject;
 
@@ -85,6 +76,12 @@ public class TaskListViewModel extends ViewModel {
     public void loadTasksInCertainPeriod(DateGroup dateGroup) {
         diskIO.execute(() -> {
             List<Task> taskList = taskRepository.getTasksInCertainPeriod(dateGroup);
+            if (taskList == null || taskList.isEmpty()) {
+                Timber.d("보여줄 데이터가 없다.(List<Task> == null || EMPTY)");
+                _processedTasks.postValue(null);
+                return;
+            }
+
             // taskList -> List<CategoryWithTasks>
             // 카테고리 : completed / uncompleted 는 언제, 어디서 만드는게 베스트일까.
             CategoryWithTasks uncompleted = wrapTaskListWithCategory(taskList, false);

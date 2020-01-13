@@ -1,4 +1,4 @@
-package com.ketchup.model;
+package com.ketchup.model.category;
 
 import androidx.annotation.NonNull;
 import androidx.room.Dao;

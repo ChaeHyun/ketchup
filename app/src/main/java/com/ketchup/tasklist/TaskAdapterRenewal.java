@@ -16,11 +16,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.ketchup.AdapterType;
 import com.ketchup.R;
 import com.ketchup.addedit.AddEditTaskFragment;
-import com.ketchup.model.CategoryWithTasks;
+import com.ketchup.model.category.CategoryWithTasks;
 import com.ketchup.model.task.ItemType;
 import com.ketchup.model.task.Task;
 import com.ketchup.utils.DateManipulator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -34,14 +35,20 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
     private NavController navController;
     private View rootView;
 
-    public TaskAdapterRenewal(Fragment fragment) {
+    public TaskAdapterRenewal(final Fragment fragment) {
         super();
         //this.data = data;
         this.navController = NavHostFragment.findNavController(fragment);
         this.rootView = fragment.getView();
     }
 
-    public void setData(List<AdapterType> data) {
+    public void setData(final List<AdapterType> data) {
+        if (data == null) {
+            this.data = new ArrayList<>();
+            notifyDataSetChanged();
+            return;
+        }
+
         for (int i = 0; i < data.size(); i++) {
             if (data.get(i).getItemType() == ItemType.HEADER) {
                 addChildTasks(data, i);
@@ -121,7 +128,7 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     // To use strike-out for the text views which it's tasks are completed.
-    private void strikeOut(List<TextView> textViews, boolean strikeout) {
+    private void strikeOut(final List<TextView> textViews, final boolean strikeout) {
         for (TextView textView : textViews) {
             if (textView == null)
                 continue;

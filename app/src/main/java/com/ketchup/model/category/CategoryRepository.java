@@ -1,4 +1,4 @@
-package com.ketchup.model;
+package com.ketchup.model.category;
 
 import java.util.Date;
 import java.util.List;

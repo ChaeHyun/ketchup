@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.ketchup.AppExecutors;
 import com.ketchup.MainActivity;
-import com.ketchup.model.CategoryRepository;
+import com.ketchup.model.category.CategoryRepository;
 import com.ketchup.model.task.Task;
 import com.ketchup.model.task.TaskRepository;
 import com.ketchup.utils.AlarmUtils;

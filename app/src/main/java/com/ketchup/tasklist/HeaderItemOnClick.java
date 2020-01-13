@@ -1,6 +1,6 @@
 package com.ketchup.tasklist;
 
-import com.ketchup.model.CategoryWithTasks;
+import com.ketchup.model.category.CategoryWithTasks;
 
 public interface HeaderItemOnClick {
     void insertChildrenOfHeader(CategoryWithTasks header);
