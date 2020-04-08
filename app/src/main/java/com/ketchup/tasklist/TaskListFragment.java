@@ -18,9 +18,12 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.ketchup.AdapterType;
+import com.ketchup.section.HeaderSection;
+import com.ketchup.section.ListSection;
+import com.ketchup.section.NewAdapter;
 import com.ketchup.addedit.AddEditTaskFragment;
 import com.ketchup.model.category.CategoryRepository;
+import com.ketchup.model.category.CategoryWithTasks;
 import com.ketchup.model.task.DateGroup;
 import com.ketchup.utils.AnchoringFab;
 import com.ketchup.utils.ContextCompatUtils;
@@ -29,7 +32,6 @@ import com.ketchup.R;
 import com.ketchup.utils.ToolbarController;
 import com.ketchup.model.task.Task;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -44,7 +46,8 @@ public class TaskListFragment extends DaggerFragment {
     private DateGroup cachedDateGroupFilter = DateGroup.TODAY;
     private EmptyRecyclerView recyclerView;
 
-    private TaskAdapterRenewal taskAdapterRenewal;
+//    private TaskAdapterRenewal taskAdapterRenewal;
+    private NewAdapter newAdapter;
 
     @Inject
     DaggerViewModelFactory viewModelFactory;
@@ -159,7 +162,11 @@ public class TaskListFragment extends DaggerFragment {
 
     private void setupEmptyRecyclerView() {
         if (getActivity() != null) {
-            taskAdapterRenewal = new TaskAdapterRenewal(this);
+//            taskAdapterRenewal = new TaskAdapterRenewal(this);
+            newAdapter = new NewAdapter(this);
+
+            // 1. Adapter 에게 사용할 그릇(ViewBinder)를 등록시킨다.
+            newAdapter.registerBinders(new HeaderViewBinder(), new TaskViewBinder());
 
             // EmptyRecyclerView Init
             recyclerView = getActivity().findViewById(R.id.fragment_task_list_recycler_view);
@@ -167,7 +174,8 @@ public class TaskListFragment extends DaggerFragment {
             recyclerView.setEmptyView(getActivity().findViewById(R.id.fragment_task_list_empty_item));
             recyclerView.setNestedScrollingEnabled(false);
 
-            recyclerView.setAdapter(taskAdapterRenewal);
+//            recyclerView.setAdapter(taskAdapterRenewal);
+            recyclerView.setAdapter(newAdapter);
         }
     }
 
@@ -252,14 +260,29 @@ public class TaskListFragment extends DaggerFragment {
             Timber.d(" [ Observer in TaskListFragment for List<CategoryWithTasks> ]");
             if (list == null) {
                 Timber.d("어댑터에 표현할 데이터가 없다. -> EmptyRecyclerView 가 보여져야한다.");
-                taskAdapterRenewal.setData(null);
+                // Empty 의 조건이 nestedSection.getCount == 0으로 변경되어야한다.
+                newAdapter.removeAllSections();
                 return;
             }
+            for (CategoryWithTasks item : list) {
+                Timber.d("Category Name : %s", item.category.getName());
+                for (Task task : item.tasks) {
+                    Timber.d("  Task Title : %s", task.getTitle());
+                }
+            }
 
-            List<AdapterType> adapterData = new ArrayList<>();
-            adapterData.addAll(list);
+            newAdapter.removeAllSections();
 
-            taskAdapterRenewal.setData(adapterData);
+            for (CategoryWithTasks item : list) {
+                HeaderSection<CategoryWithTasks> headerSection = new HeaderSection<>(item);
+                ListSection<Task> listSection = new ListSection<>();
+                listSection.addAll(item.tasks) ;
+                listSection.setOnItemClickListener(newAdapter.taskOnClickListener);
+
+                headerSection.addSection(listSection);
+
+                newAdapter.addSection(headerSection);
+            }
         });
     }
 }

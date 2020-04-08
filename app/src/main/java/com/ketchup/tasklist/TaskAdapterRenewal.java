@@ -76,11 +76,11 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         switch (type) {
             case HEADER:
-                View view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.header_item, parent, false);
-                return new HeaderViewHolder(view, rootView, this);
+//                View view = LayoutInflater.from(parent.getContext())
+//                        .inflate(R.layout.header_item, parent, false);
+//                return new HeaderViewHolder(view, rootView, this);
             case CHILD:
-                view = LayoutInflater.from(parent.getContext())
+                View view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.task_item, parent, false);
                 return new TaskViewHolder(view, this);
         }
@@ -102,6 +102,8 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
 
                 break;
             case CHILD:
+                /** onBindViewHolder 부분이 타입에 맞는 ViewBinder 로 옮겨져야할 로직이다.
+                 * Task 를 다루고 있으니까 TaskViewBinder 에서 처리되어야한다. **/
                 final Task task = (Task) item;
                 final TaskViewHolder childViewHolder = (TaskViewHolder) holder;
                 TextView titleTextView = childViewHolder.getTitleTextView();
@@ -183,5 +185,9 @@ public class TaskAdapterRenewal extends RecyclerView.Adapter<RecyclerView.ViewHo
         data.removeAll(header.tasks);
         notifyItemRangeRemoved(pos + 1, header.getCount());
         header.setFolded(true);
+    }
+
+    public TaskItemOnClick getTaskItemOnClickHelper() {
+        return this;
     }
 }
